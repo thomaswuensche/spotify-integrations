@@ -1,4 +1,4 @@
 .cache-t6am47
 credentials.py
 
-*.pyc
+__pycache__/
