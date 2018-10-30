@@ -20,7 +20,7 @@ if token:
     mysqlcnx = mysql.connect(user='root',
         password='',
         host='localhost',
-        database='Sandbox')
+        database='hs-analytics')
 
     result = spotify.user_playlist_tracks(username,
         playlist_id="spotify:user:t6am47:playlist:4doQ7lGWMlDDltEOQARV1d",
@@ -47,8 +47,11 @@ if token:
         print(activeTrack.toString())
         print(activeTrack.getGenres())
 
+        activeTrack.testConnection(name)
+
         print("***")
-        mysqlcnx.close()
+
+    mysqlcnx.close()
 
     # next block for looping through all tracks (adjust limit in previous request)
     '''

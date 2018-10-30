@@ -26,7 +26,14 @@ class ActiveTrack():
     def toString(self):
         return self.name + " : " + self.getArtistName() + " : " + self.champ + " : " + self.added_at
 
-    def testConnection(self):
-        cursor = connection.cursor()
-        # insert query here
+    def testConnection(self, name):
+        cursor = self.connection.cursor()
+
+        query = ("SELECT id, name FROM tracks WHERE name = %(name)s")
+
+        cursor.execute(query, {'name':name})
+
+        for (id, name) in cursor:
+            print("id : {} - name : {}".format(id, name))
+
         cursor.close() # conection gets closed in calling script
