@@ -3,6 +3,7 @@ import spotipy.util as util
 import credentials
 import json
 import t6util
+import activeRecords
 
 scope = 'playlist-read-collaborative'
 username = 't6am47' # argv
@@ -21,19 +22,23 @@ if token:
         limit=2,
         offset=0,
         market="DE")
+        
     #print(json.dumps(result, indent=4)) # dump full result (not related to spotipy request returning a JSON file. just used to print out dicts in a better way)
 
     for item in result['items']:
         track = item['track']
+
+        name = track['name']
         champ = t6util.whodunit(item['added_by']['id'])
         added_at = item['added_at']
         artist_result = spotify.artist(track['artists'][0]['uri'])
+
         #print(json.dumps(artist_result, indent=4))
 
-        print(track['name'] + ' - ' + track['artists'][0]['name'])
-        print(champ)
-        print(added_at)
-        print(artist_result['genres'])
+        activeTrack = activeRecords.ActiveTrack(name, artist_result, champ, added_at)
+        print(activeTrack.toString())
+        print(activeTrack.getGenres())
+
         print("***")
 
     # next block for looping through all tracks (adjust limit in previous request)
