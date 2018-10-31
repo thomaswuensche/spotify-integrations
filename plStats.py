@@ -16,10 +16,10 @@ token = util.prompt_for_user_token(username, scope,
 if token:
     spotify = spotipy.Spotify(auth=token)
 
-    mysqlcnx = mysql.connect(user='root',
-        password='',
-        host='localhost',
-        database='hs-analytics')
+    mysqlcnx = mysql.connect(user=credentials.user,
+        password=credentials.password,
+        host=credentials.host,
+        database=credentials.database)
 
     result = spotify.user_playlist_tracks(username,
         playlist_id="spotify:user:t6am47:playlist:4doQ7lGWMlDDltEOQARV1d",
