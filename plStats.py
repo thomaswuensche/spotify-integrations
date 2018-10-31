@@ -3,7 +3,6 @@ import spotipy.util as util
 import credentials
 import json
 import t6util
-import activeRecords
 import mysql.connector as mysql
 
 scope = 'playlist-read-collaborative'
@@ -29,38 +28,21 @@ if token:
         offset=0,
         market="DE")
 
-    #print(json.dumps(result, indent=4)) # dump full result (not related to spotipy request returning a JSON file. just used to print out dicts in a better way)
+    # dump full result (not related to spotipy request returning a JSON file. just used to print out dicts in a better way)
+    #print(json.dumps(result, indent=4))
 
     for item in result['items']:
-        track = item['track']
-
-        name = track['name']
-        champ = t6util.whodunit(item['added_by']['id'])
-        added_at = item['added_at']
-        artist_result = spotify.artist(track['artists'][0]['uri'])
-
-        #print(json.dumps(artist_result, indent=4))
-
-        activeTrack = activeRecords.ActiveTrack(name, artist_result, champ, added_at)
-        activeTrack.setConnection(mysqlcnx)
-
-        print(activeTrack.toString())
-        print(activeTrack.getGenres())
-
-        activeTrack.testConnection(name)
-
-        print("***")
-
-    mysqlcnx.close()
+        t6util.get_and_push_data(item, mysqlcnx, spotify)
 
     # next block for looping through all tracks (adjust limit in previous request)
     '''
     while result['next']:
         result = spotify.next(result)
         for item in result['items']:
-            track = item['track']
-            print(track['name'] + ' - ' + track['artists'][0]['name'])
+            t6util.get_and_push_data(item, mysqlcnx, spotify)
     '''
+
+    mysqlcnx.close()
 
 else:
     print("Can't get token for", username)
