@@ -4,6 +4,7 @@ class ActiveTrack():
 
     name = ""
     artist = None
+    artist_name = ""
     champ = ""
     added_at = ""
     connection = None
@@ -11,6 +12,7 @@ class ActiveTrack():
     def __init__(self, name, artist, champ, added_at):
         self.name = name
         self.artist = artist
+        self.artist_name = self.getArtistName()
         self.champ = champ
         self.added_at = added_at
 
@@ -26,12 +28,22 @@ class ActiveTrack():
     def toString(self):
         return self.name + " : " + self.getArtistName() + " : " + self.champ + " : " + self.added_at
 
-    def testConnection(self, name):
+    def insert(self):
         cursor = self.connection.cursor()
 
-        query = ("SELECT id, name FROM tracks WHERE name = %(name)s")
+        sql = "INSERT INTO pylonen (name, champ, artist) VALUES (%(name)s, %(champ)s, %(artist)s)"
+        val = {'name':self.name, 'champ':self.champ, 'artist':self.artist_name}
+        cursor.execute(sql, val)
 
-        cursor.execute(query, {'name':name})
+        self.connection.commit()
+        print("1 record inserted, ID:", cursor.lastrowid)
+        cursor.close()
+
+    def testConnection(self):
+        cursor = self.connection.cursor()
+
+        query = "SELECT id, name FROM pylonen WHERE name = %(name)s"
+        cursor.execute(query, {'name':self.name})
 
         for (id, name) in cursor:
             print("id : {} - name : {}".format(id, name))
