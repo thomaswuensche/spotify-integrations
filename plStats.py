@@ -31,7 +31,7 @@ if token:
     result = spotify.user_playlist_tracks(username,
         playlist_id="spotify:user:t6am47:playlist:4doQ7lGWMlDDltEOQARV1d",
         fields=None,
-        limit=2,
+        limit=10,
         offset=0,
         market="DE")
 
@@ -39,9 +39,10 @@ if token:
     # logging.debug(json.dumps(result, indent=4))
 
     for item in result['items']:
-        track = t6util.get_track_data(item, spotify)
-        t6util.push_track_to_db(track, connection)
         # logging.debug(json.dumps(item, indent=4))
+        track = t6util.get_track_data(item, spotify)
+        logging.debug(track.toString())
+        t6util.push_track_to_db(track, connection)
 
     # next block for looping through all tracks (adjust limit in previous request)
     '''

@@ -8,14 +8,19 @@ class ActiveTrack():
     artist_name = ""
     champ = ""
     added_at = ""
+    added_time = ""
+    explicit = False
+
     connection = None
 
-    def __init__(self, name, artist, champ, added_at):
+    def __init__(self, name, artist, champ, added_at, added_time, explicit):
         self.name = name
         self.artist = artist
         self.artist_name = self.getArtistName()
         self.champ = champ
         self.added_at = added_at
+        self.added_time = added_time
+        self.explicit = explicit
 
     def setConnection(self, connection):
         self.connection = connection
@@ -27,15 +32,23 @@ class ActiveTrack():
         return self.artist['name']
 
     def toString(self):
-        return self.name + " : " + self.getArtistName() + " : " + self.champ + " : " + self.added_at
+        return '{} : {} : {} : {} : {} : {}'.format(self.name,
+            self.getArtistName(),
+            self.champ,
+            self.added_at,
+            self.added_time,
+            self.explicit)
 
     def insert(self):
         cursor = self.connection.cursor()
 
-        sql = '''INSERT INTO pylonen (name, champ, artist, added_at)
-            VALUES (%(name)s, %(champ)s, %(artist)s, %(added_at)s)'''
+        sql = '''INSERT INTO pylonen (name, champ, artist, added_at,
+            added_time, explicit)
+            VALUES (%(name)s, %(champ)s, %(artist)s, %(added_at)s,
+            %(added_time)s, %(explicit)s)'''
         val = {'name': self.name, 'champ': self.champ, 'artist': self.artist_name,
-            'added_at': self.added_at}
+            'added_at': self.added_at, 'added_time': self.added_time,
+            'explicit': self.explicit}
         cursor.execute(sql, val)
 
         self.connection.commit()

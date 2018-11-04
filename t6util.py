@@ -25,7 +25,6 @@ def wipe_table(connection, table):
 
 def push_track_to_db(track, connection):
     track.setConnection(connection)
-    logging.debug(track.toString())
     track.insert()
 
 
@@ -34,10 +33,14 @@ def get_track_data(item, spotify):
 
     name = track['name']
     champ = whodunit(item['added_by']['id'])
-    added_at = item['added_at']
+    added_raw = item['added_at']
+    added_at = item['added_at'][:10]
+    added_time = added_raw[11:-1]
     artist_result = spotify.artist(track['artists'][0]['uri'])
+    explicit = track['explicit']
 
     #logging.debug(json.dumps(artist_result, indent=4))
 
-    track = activeRecords.ActiveTrack(name, artist_result, champ, added_at)
+    track = activeRecords.ActiveTrack(name, artist_result, champ, added_at, added_time,
+        explicit)
     return track
