@@ -31,14 +31,14 @@ if token:
     logging.info('connection opened')
 
     # deletes all data from specified table and resets auto_increment
-    t6util.wipe_table(connection, 'pylonen')
+    # t6util.wipe_table(connection, 'pylonen')
 
     # returns all tracks in specified playlist
     result = spotify.user_playlist_tracks(username,
         playlist_id="spotify:user:t6am47:playlist:4doQ7lGWMlDDltEOQARV1d",
         fields=None,
-        limit=10,
-        offset=0,
+        limit=100,
+        offset=500,
         market="DE")
 
     # dump full result (not related to spotipy request returning a JSON file. just used to print out dicts in a better way)
