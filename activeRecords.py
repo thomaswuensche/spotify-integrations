@@ -3,17 +3,19 @@ import logging
 
 class ActiveTrack():
 
-    name = ""
-    artist = None
-    artist_name = ""
-    champ = ""
-    added_at = ""
-    added_time = ""
-    explicit = False
+    # name = ""
+    # artist = None
+    # artist_name = ""
+    # champ = ""
+    # added_at = ""
+    # added_time = ""
+    # explicit = False
 
     connection = None
 
-    def __init__(self, name, artist, champ, added_at, added_time, explicit):
+    def __init__(self, name, artist, champ, added_at, added_time, explicit,
+        release_date, release_date_precision, duration, popularity,
+        danceability, energy, valence, tempo):
         self.name = name
         self.artist = artist
         self.artist_name = self.getArtistName()
@@ -21,6 +23,14 @@ class ActiveTrack():
         self.added_at = added_at
         self.added_time = added_time
         self.explicit = explicit
+        self.release_date = release_date
+        self.release_date_precision = release_date_precision
+        self.duration = duration
+        self.popularity = popularity
+        self.danceability = danceability
+        self.energy = energy
+        self.valence = valence
+        self.tempo = tempo
 
     def setConnection(self, connection):
         self.connection = connection
@@ -32,23 +42,48 @@ class ActiveTrack():
         return self.artist['name']
 
     def toString(self):
-        return '{} : {} : {} : {} : {} : {}'.format(self.name,
-            self.getArtistName(),
+        return '{} : {} : {} : {} : {} : {} : {} : {} : {} : {} : {} : {} : {} : {}'.format(
+            self.name,
+            self.artist_name,
             self.champ,
             self.added_at,
             self.added_time,
-            self.explicit)
+            self.explicit,
+            self.release_date,
+            self.release_date_precision,
+            self.duration,
+            self.popularity,
+            self.danceability,
+            self.energy,
+            self.valence,
+            self.tempo)
 
     def insert(self):
         cursor = self.connection.cursor()
 
-        sql = '''INSERT INTO pylonen (name, champ, artist, added_at,
-            added_time, explicit)
-            VALUES (%(name)s, %(champ)s, %(artist)s, %(added_at)s,
-            %(added_time)s, %(explicit)s)'''
-        val = {'name': self.name, 'champ': self.champ, 'artist': self.artist_name,
-            'added_at': self.added_at, 'added_time': self.added_time,
-            'explicit': self.explicit}
+        sql = '''INSERT INTO pylonen (name, artist, champ, added_at,
+            added_time, explicit, release_date, release_date_precision,
+            duration, popularity, danceability, energy, valence, tempo)
+            VALUES (%(name)s, %(artist)s, %(champ)s, %(added_at)s,
+            %(added_time)s, %(explicit)s, %(release_date)s, %(release_date_precision)s,
+            %(duration)s, %(popularity)s, %(danceability)s, %(energy)s,
+            %(valence)s, %(tempo)s)'''
+
+        val = {'name': self.name,
+            'artist': self.artist_name,
+            'champ': self.champ,
+            'added_at': self.added_at,
+            'added_time': self.added_time,
+            'explicit': self.explicit,
+            'release_date': self.release_date,
+            'release_date_precision': self.release_date_precision,
+            'duration': self.duration,
+            'popularity': self.popularity,
+            'danceability': self.danceability,
+            'energy': self.energy,
+            'valence': self.valence,
+            'tempo': self.tempo,}
+
         cursor.execute(sql, val)
 
         self.connection.commit()
