@@ -3,16 +3,6 @@ import logging
 
 class ActiveTrack():
 
-    # name = ""
-    # artist = None
-    # artist_name = ""
-    # champ = ""
-    # added_at = ""
-    # added_time = ""
-    # explicit = False
-
-    connection = None
-
     def __init__(self, name, artist, champ, added_at, added_time, explicit,
         release_date, release_date_precision, duration, popularity,
         danceability, energy, valence, tempo):
@@ -88,7 +78,7 @@ class ActiveTrack():
 
         self.connection.commit()
         logging.info("1 record inserted, ID: {}".format(cursor.lastrowid))
-        cursor.close()
+        cursor.close() # conection gets closed in calling script
 
     def testConnection(self):
         cursor = self.connection.cursor()
