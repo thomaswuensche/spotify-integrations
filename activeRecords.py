@@ -1,4 +1,5 @@
 import mysql.connector as mysql
+import logging
 
 class ActiveTrack():
 
@@ -31,21 +32,23 @@ class ActiveTrack():
     def insert(self):
         cursor = self.connection.cursor()
 
-        sql = "INSERT INTO pylonen (name, champ, artist) VALUES (%(name)s, %(champ)s, %(artist)s)"
-        val = {'name':self.name, 'champ':self.champ, 'artist':self.artist_name}
+        sql = '''INSERT INTO pylonen (name, champ, artist, added_at)
+            VALUES (%(name)s, %(champ)s, %(artist)s, %(added_at)s)'''
+        val = {'name': self.name, 'champ': self.champ, 'artist': self.artist_name,
+            'added_at': self.added_at}
         cursor.execute(sql, val)
 
         self.connection.commit()
-        print("1 record inserted, ID:", cursor.lastrowid)
+        logging.info("1 record inserted, ID: {}".format(cursor.lastrowid))
         cursor.close()
 
     def testConnection(self):
         cursor = self.connection.cursor()
 
         query = "SELECT id, name FROM pylonen WHERE name = %(name)s"
-        cursor.execute(query, {'name':self.name})
+        cursor.execute(query, {'name': self.name})
 
         for (id, name) in cursor:
-            print("id : {} - name : {}".format(id, name))
+            logging.info("id : {} - name : {}".format(id, name))
 
         cursor.close() # conection gets closed in calling script
