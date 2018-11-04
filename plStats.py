@@ -26,7 +26,7 @@ if token:
         host=credentials.host,
         database=credentials.database)
 
-    # t6util.wipe_table(connection, table)
+    t6util.wipe_table(connection, 'pylonen')
 
     result = spotify.user_playlist_tracks(username,
         playlist_id="spotify:user:t6am47:playlist:4doQ7lGWMlDDltEOQARV1d",
@@ -40,9 +40,8 @@ if token:
 
     for item in result['items']:
         track = t6util.get_track_data(item, spotify)
-        # t6util.push_track_to_db(track, connection)
-        logging.debug(json.dumps(item, indent=4))
-
+        t6util.push_track_to_db(track, connection)
+        # logging.debug(json.dumps(item, indent=4))
 
     # next block for looping through all tracks (adjust limit in previous request)
     '''

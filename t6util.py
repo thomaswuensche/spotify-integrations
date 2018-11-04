@@ -14,6 +14,11 @@ def wipe_table(connection, table):
     sql = "DELETE FROM {}".format(table)
     cursor.execute(sql)
     logging.info('wiped table: {}'.format(table))
+
+    sql = "ALTER TABLE {} AUTO_INCREMENT = 1".format(table)
+    cursor.execute(sql)
+    logging.info('reset AUTO_INCREMENT to 1 on table: {}'.format(table))
+
     connection.commit()
     cursor.close()
 
