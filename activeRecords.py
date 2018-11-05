@@ -78,7 +78,8 @@ class ActiveTrack():
         cursor.execute(sql, val)
 
         self.connection.commit()
-        logging.info("1 record inserted, ID: {}".format(cursor.lastrowid))
+        logging.info("1 record inserted, ID: {} - name: {}".format(cursor.lastrowid,
+            self.name))
         cursor.close() # conection gets closed in calling script
 
     def testConnection(self):
