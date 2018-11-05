@@ -32,7 +32,7 @@ if token:
     logging.info('connection opened')
 
     # deletes all data from specified table and resets auto_increment
-    # t6util.wipe_table(connection, credentials.table)
+    # t6util.wipe_table(connection)
 
     # gets last synced id
     id = t6util.get_last_id(connection)

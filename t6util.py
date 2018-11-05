@@ -1,6 +1,7 @@
 import activeRecords
 import logging
 import json
+import credentials
 
 
 def whodunit(id):
@@ -9,23 +10,24 @@ def whodunit(id):
     else :
         return "thomas"
 
-def wipe_table(connection, table):
+def wipe_table(connection):
     cursor = connection.cursor()
-    sql = "DELETE FROM {}".format(table)
+    sql = "DELETE FROM {}".format(credentials.table)
     cursor.execute(sql)
-    logging.info('wiped table: {}'.format(table))
+    logging.info('wiped table: {}'.format(credentials.table))
 
-    sql = "ALTER TABLE {} AUTO_INCREMENT = 1".format(table)
+    sql = "ALTER TABLE {} AUTO_INCREMENT = 1".format(credentials.table)
     cursor.execute(sql)
-    logging.info('reset AUTO_INCREMENT to 1 on table: {}'.format(table))
+    logging.info('reset AUTO_INCREMENT to 1 on table: {}'.format(credentials.table))
 
     connection.commit()
     cursor.close()
 
 
 def get_last_id(connection):
+    last_id = 0
     cursor = connection.cursor()
-    sql = "SELECT id FROM pylonen ORDER BY id DESC LIMIT 1"
+    sql = "SELECT id FROM {} ORDER BY id DESC LIMIT 1".format(credentials.table)
     result = cursor.execute(sql)
     for result in cursor:
         last_id = result[0]
