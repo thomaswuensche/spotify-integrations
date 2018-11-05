@@ -23,6 +23,18 @@ def wipe_table(connection, table):
     cursor.close()
 
 
+def get_last_id(connection):
+    cursor = connection.cursor()
+    sql = "SELECT id FROM pylonen ORDER BY id DESC LIMIT 1"
+    result = cursor.execute(sql)
+    for result in cursor:
+        last_id = result[0]
+
+    logging.info('last id: {}'.format(last_id))
+    cursor.close()
+    return last_id
+
+
 def push_track_to_db(track, connection):
     track.setConnection(connection)
     track.insert()

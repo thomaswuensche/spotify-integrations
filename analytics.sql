@@ -46,3 +46,20 @@ WHERE added_at = (
   	) AS t1
   )
 );
+
+-- count of tracks by release_year by user
+SELECT MID(release_date, 1, 4) AS release_year,
+	champ,
+	COUNT(id) AS count
+FROM pylonen
+GROUP BY release_year,
+	champ
+ORDER BY release_year ASC;
+
+-- avg valence by user
+SELECT champ, ROUND(AVG(valence)*100, 2) AS avg_valence
+FROM pylonen
+GROUP BY champ;
+
+SELECT ROUND(AVG(valence)*100, 2) AS avg_valence
+FROM pylonen;
