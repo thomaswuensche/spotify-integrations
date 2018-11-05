@@ -51,26 +51,13 @@ if token:
 
     # iterates through all items in the result (some other metadata is left out)
     for item in result['items']:
-        # logging.debug(json.dumps(item, indent=4))
-
-        # gets all relevant track data and creates a track object
-        try:
-            track = t6util.get_track_data(item, spotify)
-        except LocalTrackError as e:
-            logging.warning(e)
-        else:
-            logging.debug(track.toString())
-            # sets connections for track record and stores it in the database
-            t6util.push_track_to_db(track, connection)
+        t6util.process_data(item, spotify, connection)
 
     # next block for looping through all tracks (adjust limit in previous request)
     while result['next']:
         result = spotify.next(result)
         for item in result['items']:
-            # logging.debug(json.dumps(item, indent=4))
-            track = t6util.get_track_data(item, spotify)
-            logging.debug(track.toString())
-            t6util.push_track_to_db(track, connection)
+            t6util.process_data(item, spotify, connection)
 
     connection.close()
     logging.info('connection closed')

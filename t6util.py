@@ -39,6 +39,17 @@ def get_last_id(connection):
     return last_id
 
 
+def process_data(item, spotify, connection):
+    # logging.debug(json.dumps(item, indent=4))
+    try:
+        track = get_track_data(item, spotify)
+    except LocalTrackError as e:
+        logging.warning(e)
+    else:
+        logging.debug(track.toString())
+        push_track_to_db(track, connection)
+
+
 def push_track_to_db(track, connection):
     track.setConnection(connection)
     track.insert()
