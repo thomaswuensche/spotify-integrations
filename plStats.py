@@ -3,13 +3,14 @@ import spotipy.util as util
 import credentials
 import json
 import t6util
+from t6util import LocalTrackError
 import mysql.connector as mysql
 import logging
 import sys
 
 
 # sets logging configuration, change to debug for more detailed output
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
     format='%(levelname)s : %(funcName)s @ %(lineno)s - %(message)s')
 
 # scope is used to determine what data this script (app) wants to access
@@ -53,11 +54,14 @@ if token:
         # logging.debug(json.dumps(item, indent=4))
 
         # gets all relevant track data and creates a track object
-        track = t6util.get_track_data(item, spotify)
-        logging.debug(track.toString())
-
-        # sets connections for track record and stores it in the database
-        t6util.push_track_to_db(track, connection)
+        try:
+            track = t6util.get_track_data(item, spotify)
+        except LocalTrackError as e:
+            logging.warning(e)
+        else:
+            logging.debug(track.toString())
+            # sets connections for track record and stores it in the database
+            t6util.push_track_to_db(track, connection)
 
     # next block for looping through all tracks (adjust limit in previous request)
     while result['next']:
