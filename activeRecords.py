@@ -1,5 +1,6 @@
 import mysql.connector as mysql
 import logging
+import credentials
 
 class ActiveTrack():
 
@@ -51,13 +52,13 @@ class ActiveTrack():
     def insert(self):
         cursor = self.connection.cursor()
 
-        sql = '''INSERT INTO pylonen (name, artist, champ, added_at,
+        sql = '''INSERT INTO {} (name, artist, champ, added_at,
             added_time, explicit, release_date, release_date_precision,
             duration, popularity, danceability, energy, valence, tempo)
             VALUES (%(name)s, %(artist)s, %(champ)s, %(added_at)s,
             %(added_time)s, %(explicit)s, %(release_date)s, %(release_date_precision)s,
             %(duration)s, %(popularity)s, %(danceability)s, %(energy)s,
-            %(valence)s, %(tempo)s)'''
+            %(valence)s, %(tempo)s)'''.format(credentials.table)
 
         val = {'name': self.name,
             'artist': self.artist_name,
@@ -83,7 +84,7 @@ class ActiveTrack():
     def testConnection(self):
         cursor = self.connection.cursor()
 
-        query = "SELECT id, name FROM pylonen WHERE name = %(name)s"
+        query = "SELECT id, name FROM {} WHERE name = %(name)s".format(credentials.table)
         cursor.execute(query, {'name': self.name})
 
         for (id, name) in cursor:

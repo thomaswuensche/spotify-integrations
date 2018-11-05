@@ -31,7 +31,7 @@ if token:
     logging.info('connection opened')
 
     # deletes all data from specified table and resets auto_increment
-    # t6util.wipe_table(connection, 'pylonen')
+    # t6util.wipe_table(connection, credentials.table)
 
     # returns all tracks in specified playlist
     result = spotify.user_playlist_tracks(username,
