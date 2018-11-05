@@ -10,7 +10,7 @@ import sys
 
 
 # sets logging configuration, change to debug for more detailed output
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
     format='%(levelname)s : %(funcName)s @ %(lineno)s - %(message)s')
 
 # scope is used to determine what data this script (app) wants to access
