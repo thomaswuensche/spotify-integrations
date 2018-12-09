@@ -1,6 +1,6 @@
 # hs-analytics
 
-analytics for playlist 'heisser scheiss' written in python
+playlist analytics in python
 
 ## resources
 
