@@ -1,9 +1,8 @@
 import spotipy
-import spotipy.util as util
+import spotipy.util
 import credentials
 import json
-import t6util
-from t6util import LocalTrackError
+import helpers
 import mysql.connector as mysql
 import logging
 import sys
@@ -17,7 +16,7 @@ logging.basicConfig(level=logging.INFO,
 scope = 'playlist-read-collaborative'
 username = 't6am47'
 
-token = util.prompt_for_user_token(username, scope,
+token = spotipy.util.prompt_for_user_token(username, scope,
     credentials.client_id,
     credentials.client_secret,
     credentials.redirect_uri) # had to be registered in the app settings
@@ -33,10 +32,10 @@ if token:
     logging.info('connection opened')
 
     # deletes all data from specified table and resets auto_increment
-    # t6util.wipe_table(connection)
+    # database.wipe_table(connection, credentials.table)
 
     # gets last synced id
-    id = t6util.get_last_id(connection)
+    id = database.get_last_id(connection, credentials.table)
 
     # returns all tracks in specified playlist
     result = spotify.user_playlist_tracks(username,
@@ -51,13 +50,13 @@ if token:
 
     # iterates through all items in the result (some other metadata is left out)
     for item in result['items']:
-        t6util.process_data(item, spotify, connection)
+        helpers.process_data(item, spotify, connection)
 
     # next block for looping through all tracks (adjust limit in previous request)
     while result['next']:
         result = spotify.next(result)
         for item in result['items']:
-            t6util.process_data(item, spotify, connection)
+            helpers.process_data(item, spotify, connection)
 
     connection.close()
     logging.info('connection closed')

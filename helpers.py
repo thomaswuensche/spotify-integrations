@@ -1,43 +1,13 @@
-import activeRecords
+import models
 import logging
 import json
 import credentials
-
-class LocalTrackError(ValueError):
-    pass
 
 def whodunit(id):
     if id == "1163268620" :
         return "markus"
     else :
         return "thomas"
-
-def wipe_table(connection):
-    cursor = connection.cursor()
-    sql = "DELETE FROM {}".format(credentials.table)
-    cursor.execute(sql)
-    logging.info('wiped table: {}'.format(credentials.table))
-
-    sql = "ALTER TABLE {} AUTO_INCREMENT = 1".format(credentials.table)
-    cursor.execute(sql)
-    logging.info('reset AUTO_INCREMENT to 1 on table: {}'.format(credentials.table))
-
-    connection.commit()
-    cursor.close()
-
-
-def get_last_id(connection):
-    last_id = 0
-    cursor = connection.cursor()
-    sql = "SELECT id FROM {} ORDER BY id DESC LIMIT 1".format(credentials.table)
-    result = cursor.execute(sql)
-    for result in cursor:
-        last_id = result[0]
-
-    logging.info('last id: {}'.format(last_id))
-    cursor.close()
-    return last_id
-
 
 def process_data(item, spotify, connection):
     # logging.debug(json.dumps(item, indent=4))
@@ -47,13 +17,7 @@ def process_data(item, spotify, connection):
         logging.warning(e)
     else:
         logging.debug(track.toString())
-        push_track_to_db(track, connection)
-
-
-def push_track_to_db(track, connection):
-    track.setConnection(connection)
-    track.insert()
-
+        track.insert(connection)
 
 def get_track_data(item, spotify):
     track = item['track']
@@ -82,7 +46,7 @@ def get_track_data(item, spotify):
     # logging.debug(json.dumps(artist_result, indent=4))
     # logging.debug(json.dumps(features, indent=4))
 
-    track = activeRecords.ActiveTrack(name, artist_result, champ, added_at, added_time,
+    track = models.ActiveTrack(name, artist_result, champ, added_at, added_time,
         explicit, release_date, release_date_precision, duration, popularity,
         danceability, energy, valence, tempo)
     return track

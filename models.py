@@ -49,7 +49,8 @@ class ActiveTrack():
             self.valence,
             self.tempo)
 
-    def insert(self):
+    def insert(self, connection):
+        track.setConnection(connection)
         cursor = self.connection.cursor()
 
         sql = '''INSERT INTO {} (name, artist, champ, added_at,
@@ -80,15 +81,4 @@ class ActiveTrack():
         self.connection.commit()
         logging.info("1 record inserted, ID: {} - name: {}".format(cursor.lastrowid,
             self.name))
-        cursor.close() # conection gets closed in calling script
-
-    def testConnection(self):
-        cursor = self.connection.cursor()
-
-        query = "SELECT id, name FROM {} WHERE name = %(name)s".format(credentials.table)
-        cursor.execute(query, {'name': self.name})
-
-        for (id, name) in cursor:
-            logging.info("id : {} - name : {}".format(id, name))
-
         cursor.close() # conection gets closed in calling script

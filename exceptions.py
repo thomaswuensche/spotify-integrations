@@ -1,0 +1,2 @@
+class LocalTrackError(ValueError):
+    pass
