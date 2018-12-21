@@ -50,7 +50,7 @@ class ActiveTrack():
             self.tempo)
 
     def insert(self, connection):
-        track.setConnection(connection)
+        self.setConnection(connection)
         cursor = self.connection.cursor()
 
         sql = '''INSERT INTO {} (name, artist, champ, added_at,

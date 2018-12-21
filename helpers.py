@@ -2,6 +2,7 @@ import models
 import logging
 import json
 import credentials
+import exceptions
 
 def whodunit(id):
     if id == "1163268620" :

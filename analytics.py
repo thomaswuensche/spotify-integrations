@@ -3,6 +3,7 @@ import spotipy.util
 import credentials
 import json
 import helpers
+import database
 import mysql.connector as mysql
 import logging
 import sys
