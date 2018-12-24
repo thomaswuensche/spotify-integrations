@@ -2,7 +2,7 @@ import models
 import logging
 import json
 import credentials
-import exceptions
+from exceptions import LocalTrackError
 
 def setLoggingLevel(level):
     logging.basicConfig(level=level,
