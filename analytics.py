@@ -8,10 +8,7 @@ import mysql.connector as mysql
 import logging
 import sys
 
-
-# sets logging configuration, change to debug for more detailed output
-logging.basicConfig(level=logging.INFO,
-    format='%(levelname)s : %(funcName)s @ %(lineno)s - %(message)s')
+helpers.setLoggingLevel(logging.INFO)
 
 # scope is used to determine what data this script (app) wants to access
 scope = 'playlist-read-collaborative'
@@ -46,7 +43,7 @@ if token:
         offset=id,
         market="DE")
 
-    # dump full result (not related to spotipy request returning a JSON file. just used to print out dicts in a better way)
+    # dump full result (json not related to spotipy request returning a JSON file. just used to print out dicts in a better way)
     # logging.debug(json.dumps(result, indent=4))
 
     # iterates through all items in the result (some other metadata is left out)

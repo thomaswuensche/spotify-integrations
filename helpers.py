@@ -4,6 +4,10 @@ import json
 import credentials
 import exceptions
 
+def setLoggingLevel(level):
+    logging.basicConfig(level=level,
+        format='%(levelname)s : %(funcName)s @ %(lineno)s - %(message)s')
+
 def whodunit(id):
     if id == "1163268620" :
         return "markus"
