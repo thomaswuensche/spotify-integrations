@@ -26,3 +26,28 @@ def get_last_id(connection, table):
     logging.info('last id: {}'.format(last_id))
     cursor.close()
     return last_id
+
+def get_count_local_tracks(connection):
+    cursor = connection.cursor()
+
+    sql = "SELECT value FROM metadata WHERE name=%(name)s"
+    val = {'name': 'count_local_tracks'}
+
+    cursor.execute(sql, val)
+    for result in cursor:
+        count_local_tracks = result[0]
+
+    logging.info('count of local tracks: {}'.format(count_local_tracks))
+    cursor.close()
+    return count_local_tracks
+
+def increment_count_local_tracks(connection):
+    cursor = connection.cursor()
+
+    sql = "UPDATE metadata SET value = value+1 WHERE name=%(name)s"
+    val = {'name': 'count_local_tracks'}
+
+    cursor.execute(sql, val)
+
+    cursor.close()
+    return count_local_tracks
