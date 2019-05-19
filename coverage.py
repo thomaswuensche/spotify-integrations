@@ -2,13 +2,13 @@ import spotipy
 import spotipy.util
 import credentials
 import helpers
-import json
+import pprint as pp
 import logging
 import sys
 
-helpers.setLoggingLevel(logging.INFO)
+helpers.setLoggingLevel(logging.DEBUG)
 
-scope = 'playlist-modify-public playlist-read-collaborative user-library-read'
+scope = 'playlist-modify-private playlist-read-collaborative user-library-read'
 username = 't6am47'
 
 token = spotipy.util.prompt_for_user_token(username, scope,
@@ -40,8 +40,18 @@ if token:
     helpers.store_result(api, list_pl, result_lib)
 
     diff = list(set(list_hs) - set(list_pl))
-    logging.info(json.dumps(diff, indent=4))
+    # logging.debug(pp.pformat(diff))
     logging.info(len(diff))
+
+    for i in range(0, len(diff), 100):
+        if i == 0:
+            api.user_playlist_replace_tracks(username,
+                'spotify:user:t6am47:playlist:1RUo8WtwUnD6ITVsLNUXl0',
+                diff[i : i+100])
+        else:
+            api.user_playlist_add_tracks(username,
+                'spotify:user:t6am47:playlist:1RUo8WtwUnD6ITVsLNUXl0',
+                diff[i : i+100])
 
 else:
     logging.error("Can't get token for", username)

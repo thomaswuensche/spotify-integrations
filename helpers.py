@@ -26,11 +26,9 @@ def store_tracks(list, tracks):
     for track in tracks:
         try:
             if not track['is_local']:
-                logging.debug(track['track']['id'] + ' - ' + track['track']['name'])
-                list.append(track['track']['id'] + ' - ' + track['track']['name'])
+                list.append(track['track']['id'])
         except KeyError as e:
-            logging.debug(track['track']['id'] + ' - ' + track['track']['name'])
-            list.append(track['track']['id'] + ' - ' + track['track']['name'])
+            list.append(track['track']['id'])
 
 
 class DataHandler():
