@@ -15,6 +15,24 @@ def whodunit(id):
     else :
         return "thomas"
 
+def store_result(api, list, result):
+    store_tracks(list, result['items'])
+
+    while result['next']:
+        result = api.next(result)
+        store_tracks(list, result['items'])
+
+def store_tracks(list, tracks):
+    for track in tracks:
+        try:
+            if not track['is_local']:
+                logging.debug(track['track']['id'] + ' - ' + track['track']['name'])
+                list.append(track['track']['id'] + ' - ' + track['track']['name'])
+        except KeyError as e:
+            logging.debug(track['track']['id'] + ' - ' + track['track']['name'])
+            list.append(track['track']['id'] + ' - ' + track['track']['name'])
+
+
 class DataHandler():
 
     def __init__(self, spotify, connection):
