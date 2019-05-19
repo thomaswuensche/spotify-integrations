@@ -37,7 +37,7 @@ if token:
             helpers.store_result(api, list_pl, result_tracks)
 
     result_lib = api.current_user_saved_tracks()
-    helpers.store_result(api, list_pl, result_lib)
+    helpers.store_result_lib(api, list_pl, result_lib)
 
     diff = list(set(list_hs) - set(list_pl))
     # logging.debug(pp.pformat(diff))

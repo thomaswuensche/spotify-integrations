@@ -23,17 +23,7 @@ if token:
     list_pl = []
 
     result_lib = api.current_user_saved_tracks()
-
-    for track in result_lib['items']:
-        if track['added_at'][:4] >= '2018':
-            list_lib.append(track['track']['id'])
-
-    while result_lib['next']:
-        result_lib = api.next(result_lib)
-        for track in result_lib['items']:
-            if track['added_at'][:4] >= '2018':
-                list_lib.append(track['track']['id'])
-
+    helpers.store_result_lib(api, list_lib, result_lib, '2018')
 
     result_pl = api.user_playlists(username)
 

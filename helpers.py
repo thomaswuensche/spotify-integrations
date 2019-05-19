@@ -24,10 +24,20 @@ def store_result(api, list, result):
 
 def store_tracks(list, tracks):
     for track in tracks:
-        try:
-            if not track['is_local']:
-                list.append(track['track']['id'])
-        except KeyError as e:
+        if not track['is_local']:
+            list.append(track['track']['id'])
+
+
+def store_result_lib(api, list, result, year='1970'):
+    store_tracks_lib(list, result['items'], year)
+
+    while result['next']:
+        result = api.next(result)
+        store_tracks_lib(list, result['items'], year)
+
+def store_tracks_lib(list, tracks, year):
+    for track in tracks:
+        if track['added_at'][:4] >= year:
             list.append(track['track']['id'])
 
 
