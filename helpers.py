@@ -1,6 +1,6 @@
 import models
 import logging
-import json
+import pprint as pp
 import credentials
 import database
 from exceptions import LocalTrackError
@@ -38,7 +38,7 @@ class DataHandler():
         self.connection = connection
 
     def process_data(self, item):
-        # logging.debug(json.dumps(item, indent=4))
+        # logging.debug(pp.pformat(item))
         try:
             track = self.get_track_data(item)
         except LocalTrackError as e:
@@ -72,8 +72,8 @@ class DataHandler():
         valence = features['valence']
         tempo = features['tempo']
 
-        # logging.debug(json.dumps(artist_result, indent=4))
-        # logging.debug(json.dumps(features, indent=4))
+        # logging.debug(pp.pformat(artist_result))
+        # logging.debug(pp.pformat(features))
 
         track = models.ActiveTrack(name, artist_result, champ, added_at, added_time,
             explicit, release_date, release_date_precision, duration, popularity,

@@ -1,7 +1,7 @@
 import spotipy
 import spotipy.util
 import credentials
-import json
+import pprint as pp
 import helpers
 from helpers import DataHandler
 import database
@@ -18,10 +18,10 @@ username = 't6am47'
 token = spotipy.util.prompt_for_user_token(username, scope,
     credentials.client_id,
     credentials.client_secret,
-    credentials.redirect_uri) # had to be registered in the app settings
+    credentials.redirect_uri) # registered in app settings
 
 if token:
-    spotify = spotipy.Spotify(auth=token)
+    api = spotipy.Spotify(auth=token)
 
     # creates connection to mysql database w/ credentials in separate file
     connection = mysql.connect(user=credentials.user,
@@ -34,22 +34,21 @@ if token:
     # database.wipe_table(connection, credentials.table)
 
     # create DataHandler object
-    dataHandler = DataHandler(spotify, connection)
+    dataHandler = DataHandler(api, connection)
 
     # gets last synced id
     id = database.get_last_id(connection, credentials.table)
     count_local_tracks = database.get_count_local_tracks(connection)
 
     # returns all tracks in specified playlist
-    result = spotify.user_playlist_tracks(username,
+    result = api.user_playlist_tracks(username,
         playlist_id="spotify:user:t6am47:playlist:4doQ7lGWMlDDltEOQARV1d",
         fields=None,
         limit=100,
         offset=id + count_local_tracks,
         market="DE")
 
-    # dump full result (json not related to spotipy request returning a JSON file. just used to print out dicts in a better way)
-    # logging.debug(json.dumps(result, indent=4))
+    # logging.debug(pp.pformat(result))
 
     # iterates through all items in the result (some other metadata is left out)
     for item in result['items']:
@@ -57,7 +56,7 @@ if token:
 
     # next block for looping through all tracks (adjust limit in previous request)
     while result['next']:
-        result = spotify.next(result)
+        result = api.next(result)
         for item in result['items']:
             dataHandler.process_data(item)
 
