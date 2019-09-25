@@ -28,17 +28,17 @@ def store_tracks(list, tracks):
             list.append(track['track']['id'])
 
 
-def store_result_lib(api, list, result, year='1970'):
-    store_tracks_lib(list, result['items'], year)
+def store_result_lib(api, dict, result, year='1970'):
+    store_tracks_lib(dict, result['items'], year)
 
     while result['next']:
         result = api.next(result)
-        store_tracks_lib(list, result['items'], year)
+        store_tracks_lib(dict, result['items'], year)
 
-def store_tracks_lib(list, tracks, year):
+def store_tracks_lib(dict, tracks, year):
     for track in tracks:
         if track['added_at'][:4] >= year:
-            list.append(track['track']['id'])
+            dict.update({track['track']['id'] : track['added_at']})
 
 
 class DataHandler():

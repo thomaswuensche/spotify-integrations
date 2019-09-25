@@ -6,7 +6,7 @@ import pprint as pp
 import logging
 import sys
 
-helpers.setLoggingLevel(logging.DEBUG)
+helpers.setLoggingLevel(logging.INFO)
 
 scope = 'playlist-modify-private user-library-read'
 username = 't6am47'
@@ -19,15 +19,17 @@ token = spotipy.util.prompt_for_user_token(username, scope,
 if token:
     api = spotipy.Spotify(auth=token)
 
-    list_lib = []
+    dict_lib = {}
     list_pl = []
 
+    logging.info('getting saved tracks...')
     result_lib = api.current_user_saved_tracks()
-    helpers.store_result_lib(api, list_lib, result_lib, '2018')
+    helpers.store_result_lib(api, dict_lib, result_lib, '2018')
 
-    result_pl = api.user_playlists(username)
+    user_playlists = api.user_playlists(username)
 
-    for playlist in result_pl['items']:
+    logging.info('getting tracks in playlists...')
+    for playlist in user_playlists['items']:
         if ('_' in playlist['name']) or ('//' in playlist['name']):
             logging.info(playlist['id'] + ' - ' + playlist['name'])
 
@@ -35,19 +37,29 @@ if token:
                 playlist_id=playlist['id'])
             helpers.store_result(api, list_pl, result_tracks)
 
-    diff = list(set(list_lib) - set(list_pl))
-    # logging.debug(pp.pformat(diff))
-    logging.info(len(diff))
+    diff = list(set(dict_lib.keys()) - set(list_pl))
+    logging.info('tracks not covered: ' + str(len(diff)))
 
-    for i in range(0, len(diff), 100):
+    logging.info('sorting tracks by added at...')
+    diff_with_added_at = {}
+    for item in diff:
+        diff_with_added_at.update({item : dict_lib[item]})
+
+    sorted_tuples = sorted(diff_with_added_at.items(), reverse=True, key=lambda x: x[1])
+    list_upload = []
+    for item in sorted_tuples:
+        list_upload.append(item[0])
+
+    logging.info('uploading tracks...')
+    for i in range(0, len(list_upload), 100):
         if i == 0:
             api.user_playlist_replace_tracks(username,
                 'spotify:user:t6am47:playlist:1D6xkvZWaikkFBCNtPT63q',
-                diff[i : i+100])
+                list_upload[i : i+100])
         else:
             api.user_playlist_add_tracks(username,
                 'spotify:user:t6am47:playlist:1D6xkvZWaikkFBCNtPT63q',
-                diff[i : i+100])
+                list_upload[i : i+100])
 
 else:
     logging.error("Can't get token for", username)
