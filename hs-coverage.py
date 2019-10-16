@@ -6,7 +6,7 @@ import pprint as pp
 import logging
 import sys
 
-helpers.setLoggingLevel(logging.DEBUG)
+helpers.setLoggingLevel(logging.INFO)
 
 scope = 'playlist-modify-private playlist-read-collaborative user-library-read'
 username = 't6am47'
@@ -19,39 +19,22 @@ token = spotipy.util.prompt_for_user_token(username, scope,
 if token:
     api = spotipy.Spotify(auth=token)
 
-    list_hs = []
-    list_pl = []
+    dict_hs = {}
 
+    logging.info('getting tracks from hs...')
     result_hs = api.user_playlist_tracks(username,
         playlist_id='spotify:user:t6am47:playlist:4doQ7lGWMlDDltEOQARV1d')
-    helpers.store_result(api, list_hs, result_hs)
+    helpers.store_result_with_date(api, dict_hs, result_hs)
 
-    result_pl = api.user_playlists(username)
+    list_covered_tracks = helpers.store_tracks_from_playlists(api, username)
 
-    for playlist in result_pl['items']:
-        if ('_' in playlist['name']) or ('//' in playlist['name']):
-            logging.info(playlist['id'] + ' - ' + playlist['name'])
+    diff = list(set(dict_hs.keys()) - set(list_covered_tracks))
+    logging.info('tracks not covered: ' + str(len(diff)))
 
-            result_tracks = api.user_playlist_tracks(username,
-                playlist_id=playlist['id'])
-            helpers.store_result(api, list_pl, result_tracks)
+    list_upload = helpers.sort_diff_tracks(diff, dict_hs)
 
-    result_lib = api.current_user_saved_tracks()
-    helpers.store_result_lib(api, list_pl, result_lib)
-
-    diff = list(set(list_hs) - set(list_pl))
-    # logging.debug(pp.pformat(diff))
-    logging.info(len(diff))
-
-    for i in range(0, len(diff), 100):
-        if i == 0:
-            api.user_playlist_replace_tracks(username,
-                'spotify:user:t6am47:playlist:1RUo8WtwUnD6ITVsLNUXl0',
-                diff[i : i+100])
-        else:
-            api.user_playlist_add_tracks(username,
-                'spotify:user:t6am47:playlist:1RUo8WtwUnD6ITVsLNUXl0',
-                diff[i : i+100])
+    helpers.upload_that_shit(api, username, list_upload,
+        'spotify:user:t6am47:playlist:1RUo8WtwUnD6ITVsLNUXl0')
 
 else:
     logging.error("Can't get token for", username)

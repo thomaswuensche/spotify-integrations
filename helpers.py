@@ -15,30 +15,70 @@ def whodunit(id):
     else :
         return "thomas"
 
-def store_result(api, list, result):
-    store_tracks(list, result['items'])
+def store_tracks_from_playlists(api, username):
+    logging.info('getting tracks from playlists...')
+
+    list_covered_tracks = []
+    user_playlists = api.user_playlists(username)
+
+    for playlist in user_playlists['items']:
+        if ('_' in playlist['name']) or ('//' in playlist['name']):
+            logging.info(playlist['id'] + ' - ' + playlist['name'])
+            result_tracks = api.user_playlist_tracks(username, playlist_id=playlist['id'])
+            store_result(api, list_covered_tracks, result_tracks)
+
+    return list_covered_tracks
+
+def store_result(api, list, result, from_lib=False):
+    store_tracks(list, result['items'], from_lib)
 
     while result['next']:
         result = api.next(result)
-        store_tracks(list, result['items'])
+        store_tracks(list, result['items'], from_lib)
 
-def store_tracks(list, tracks):
+def store_tracks(list, tracks, from_lib):
     for track in tracks:
-        if not track['is_local']:
+        if from_lib:
             list.append(track['track']['id'])
+        else:
+            if not track['is_local']:
+                list.append(track['track']['id'])
 
-
-def store_result_lib(api, dict, result, year='1970'):
-    store_tracks_lib(dict, result['items'], year)
+def store_result_with_date(api, dict, result, from_lib=False):
+    store_tracks_with_date(dict, result['items'], from_lib)
 
     while result['next']:
         result = api.next(result)
-        store_tracks_lib(dict, result['items'], year)
+        store_tracks_with_date(dict, result['items'], from_lib)
 
-def store_tracks_lib(dict, tracks, year):
+def store_tracks_with_date(dict, tracks, from_lib):
     for track in tracks:
-        if track['added_at'][:4] >= year:
+        if from_lib:
             dict.update({track['track']['id'] : track['added_at']})
+        else:
+            if not track['is_local']:
+                dict.update({track['track']['id'] : track['added_at']})
+
+def sort_diff_tracks(diff, info_dict):
+    logging.info('sorting tracks by added at...')
+    diff_with_added_at = {}
+    for item in diff:
+        diff_with_added_at.update({item : info_dict[item]})
+
+    sorted_tuples = sorted(diff_with_added_at.items(), reverse=True, key=lambda x: x[1])
+    list_upload = []
+    for item in sorted_tuples:
+        list_upload.append(item[0])
+
+    return list_upload
+
+def upload_that_shit(api, username, list_upload, playlist_id):
+    logging.info('uploading tracks...')
+    for i in range(0, len(list_upload), 100):
+        if i == 0:
+            api.user_playlist_replace_tracks(username, playlist_id, list_upload[i : i+100])
+        else:
+            api.user_playlist_add_tracks(username, playlist_id, list_upload[i : i+100])
 
 
 class DataHandler():

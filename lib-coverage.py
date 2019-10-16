@@ -20,11 +20,11 @@ if token:
     api = spotipy.Spotify(auth=token)
 
     dict_lib = {}
-    list_pl = []
+    list_covered_tracks = []
 
     logging.info('getting saved tracks...')
     result_lib = api.current_user_saved_tracks()
-    helpers.store_result_lib(api, dict_lib, result_lib, '2018')
+    helpers.store_result_with_date(api, dict_lib, result_lib, from_lib=True)
 
     user_playlists = api.user_playlists(username)
 
@@ -35,9 +35,9 @@ if token:
 
             result_tracks = api.user_playlist_tracks(username,
                 playlist_id=playlist['id'])
-            helpers.store_result(api, list_pl, result_tracks)
+            helpers.store_result(api, list_covered_tracks, result_tracks)
 
-    diff = list(set(dict_lib.keys()) - set(list_pl))
+    diff = list(set(dict_lib.keys()) - set(list_covered_tracks))
     logging.info('tracks not covered: ' + str(len(diff)))
 
     logging.info('sorting tracks by added at...')
