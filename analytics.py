@@ -12,7 +12,7 @@ import sys
 helpers.setLoggingLevel(logging.INFO)
 
 # scope is used to determine what data this script (app) wants to access
-scope = 'playlist-read-collaborative'
+scope = 'playlist-modify-private playlist-read-collaborative user-library-read'
 username = 't6am47'
 
 token = spotipy.util.prompt_for_user_token(username, scope,

@@ -8,7 +8,7 @@ import sys
 
 helpers.setLoggingLevel(logging.INFO)
 
-scope = 'playlist-modify-private user-library-read'
+scope = 'playlist-modify-private playlist-read-collaborative user-library-read'
 username = 't6am47'
 
 token = spotipy.util.prompt_for_user_token(username, scope,
