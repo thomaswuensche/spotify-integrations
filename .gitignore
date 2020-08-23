@@ -1,5 +1,6 @@
 .cache-t6am47
 credentials.py
+.env
 
 __pycache__/
 .python-version

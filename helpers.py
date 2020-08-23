@@ -4,6 +4,7 @@ import pprint as pp
 import credentials
 import database
 from exceptions import LocalTrackError
+import os
 
 def setLoggingLevel(level):
     logging.basicConfig(
@@ -29,27 +30,36 @@ class CoverageBot():
 
         self.store_result_with_date(dict_with_dates, result, from_lib)
 
-        list_covered_tracks = self.store_tracks_from_playlists()
+        covered_tracks = self.get_covered_tracks()
+        flagged_tracks = self.get_flagged_tracks()
 
-        diff = list(set(dict_with_dates.keys()) - set(list_covered_tracks))
+        diff = list(set(dict_with_dates.keys()) - set(covered_tracks) - set(flagged_tracks))
         logging.info('tracks not covered: ' + str(len(diff)))
 
         list_upload = self.sort_diff_tracks(diff, dict_with_dates)
         self.upload_that_shit(list_upload, destination_playlist)
 
-    def store_tracks_from_playlists(self):
+    def get_flagged_tracks(self):
+        logging.info('getting flagged tracks...')
+
+        flagged_tracks = []
+        result_tracks = self.api.user_playlist_tracks(self.username, playlist_id=os.environ['PLAYLIST_COVERAGE_FLAGGED'])
+        self.store_result(flagged_tracks, result_tracks, from_lib=False)
+        return flagged_tracks
+
+    def get_covered_tracks(self):
         logging.info('getting tracks from playlists...')
 
-        list_covered_tracks = []
+        covered_tracks = []
         user_playlists = self.api.user_playlists(self.username)
 
         for playlist in user_playlists['items']:
             if ('_' in playlist['name']) or ('//' in playlist['name']):
                 logging.info(playlist['id'] + ' - ' + playlist['name'])
                 result_tracks = self.api.user_playlist_tracks(self.username, playlist_id=playlist['id'])
-                self.store_result(list_covered_tracks, result_tracks, from_lib=False)
+                self.store_result(covered_tracks, result_tracks, from_lib=False)
 
-        return list_covered_tracks
+        return covered_tracks
 
     def store_result(self, list, result, from_lib):
         self.store_tracks(list, result['items'], from_lib)
