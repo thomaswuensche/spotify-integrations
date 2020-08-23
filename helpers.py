@@ -6,13 +6,15 @@ import database
 from exceptions import LocalTrackError
 
 def setLoggingLevel(level):
-    logging.basicConfig(level=level,
-        format='%(levelname)s : %(funcName)s @ %(lineno)s - %(message)s')
+    logging.basicConfig(
+        level=level,
+        format='%(levelname)s : %(funcName)s @ %(lineno)s - %(message)s'
+    )
 
 def whodunit(id):
-    if id == "1163268620" :
+    if id == "1163268620":
         return "markus"
-    else :
+    else:
         return "thomas"
 
 
