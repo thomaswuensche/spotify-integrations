@@ -9,7 +9,7 @@ import os
 helpers.setLoggingLevel(logging.INFO)
 
 scope = 'playlist-modify-private playlist-read-collaborative user-library-read'
-username = 't6am47'
+username = os.environ['SPOTIFY_USERNAME']
 
 token = spotipy.util.prompt_for_user_token(
     username, scope,
@@ -27,7 +27,6 @@ if token:
     coverageBot.process_coverage(
         result_lib,
         os.environ['PLAYLIST_LIB_COVERAGE'],
-        from_lib=True
     )
 
     logging.info('getting tracks from hs...')
@@ -35,7 +34,6 @@ if token:
     coverageBot.process_coverage(
         result_hs,
         os.environ['PLAYLIST_HS_COVERAGE'],
-        from_lib=False
     )
 
 else:

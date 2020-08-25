@@ -24,78 +24,60 @@ class CoverageBot():
     def __init__(self, api, username):
         self.api = api
         self.username = username
+        self.flagged_tracks = {}
+        self.covered_tracks = {}
 
-    def process_coverage(self, result, destination_playlist, from_lib):
-        dict_with_dates = {}
-
-        self.store_result_with_date(dict_with_dates, result, from_lib)
-
+    def process_coverage(self, result, destination_playlist):
+        tracks_to_check = self.extract_tracks(result)
         covered_tracks = self.get_covered_tracks()
         flagged_tracks = self.get_flagged_tracks()
 
-        diff = list(set(dict_with_dates.keys()) - set(covered_tracks) - set(flagged_tracks))
+        diff = list(set(tracks_to_check.keys()) - set(covered_tracks.keys()) - set(flagged_tracks.keys()))
         logging.info('tracks not covered: ' + str(len(diff)))
 
-        list_upload = self.sort_diff_tracks(diff, dict_with_dates)
+        list_upload = self.sort_diff_tracks(diff, tracks_to_check)
         self.upload_that_shit(list_upload, destination_playlist)
 
     def get_flagged_tracks(self):
         logging.info('getting flagged tracks...')
 
-        flagged_tracks = []
-        result_tracks = self.api.user_playlist_tracks(self.username, playlist_id=os.environ['PLAYLIST_COVERAGE_FLAGGED'])
-        self.store_result(flagged_tracks, result_tracks, from_lib=False)
-        return flagged_tracks
+        if not self.flagged_tracks:
+            result = self.api.user_playlist_tracks(self.username, playlist_id=os.environ['PLAYLIST_COVERAGE_FLAGGED'])
+            self.flagged_tracks = self.extract_tracks(result)
+
+        return self.flagged_tracks
 
     def get_covered_tracks(self):
         logging.info('getting tracks from playlists...')
 
-        covered_tracks = []
-        user_playlists = self.api.user_playlists(self.username)
+        if not self.covered_tracks:
+            user_playlists = self.api.user_playlists(self.username)
 
-        for playlist in user_playlists['items']:
-            if ('_' in playlist['name']) or ('//' in playlist['name']):
-                logging.info(playlist['id'] + ' - ' + playlist['name'])
-                result_tracks = self.api.user_playlist_tracks(self.username, playlist_id=playlist['id'])
-                self.store_result(covered_tracks, result_tracks, from_lib=False)
+            for playlist in user_playlists['items']:
+                if ('_' in playlist['name']) or ('//' in playlist['name']):
+                    logging.info(playlist['id'] + ' - ' + playlist['name'])
+                    result = self.api.user_playlist_tracks(self.username, playlist_id=playlist['id'])
+                    self.covered_tracks.update(self.extract_tracks(result))
 
-        return covered_tracks
+        return self.covered_tracks
 
-    def store_result(self, list, result, from_lib):
-        self.store_tracks(list, result['items'], from_lib)
+    def extract_tracks(self, result):
+        tracks = {}
+        while True:
+            for item in result['items']:
+                if not item['track']['is_local']:
+                    tracks[item['track']['id']] = item['added_at']
 
-        while result['next']:
+            if not result['next']: break
             result = self.api.next(result)
-            self.store_tracks(list, result['items'], from_lib)
 
-    def store_tracks(self, list, tracks, from_lib):
-        for track in tracks:
-            if from_lib:
-                list.append(track['track']['id'])
-            else:
-                if not track['is_local']:
-                    list.append(track['track']['id'])
-
-    def store_result_with_date(self, dict, result, from_lib):
-        self.store_tracks_with_date(dict, result['items'], from_lib)
-
-        while result['next']:
-            result = self.api.next(result)
-            self.store_tracks_with_date(dict, result['items'], from_lib)
-
-    def store_tracks_with_date(self, dict, tracks, from_lib):
-        for track in tracks:
-            if from_lib:
-                dict.update({track['track']['id'] : track['added_at']})
-            else:
-                if not track['is_local']:
-                    dict.update({track['track']['id'] : track['added_at']})
+        return tracks
 
     def sort_diff_tracks(self, diff, info_dict):
         logging.info('sorting tracks by added at...')
         diff_with_added_at = {}
         for item in diff:
-            diff_with_added_at.update({item : info_dict[item]})
+            diff_with_added_at[item] = info_dict[item]
 
         sorted_tuples = sorted(diff_with_added_at.items(), reverse=True, key=lambda x: x[1])
         list_upload = []
