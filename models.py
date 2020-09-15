@@ -1,4 +1,4 @@
-import mysql.connector as mysql
+# import mysql.connector as mysql
 import logging
 import credentials
 
@@ -49,8 +49,7 @@ class ActiveTrack():
             self.valence,
             self.tempo)
 
-    def insert(self, connection):
-        self.setConnection(connection)
+    def insert(self):
         cursor = self.connection.cursor()
 
         sql = '''INSERT INTO {} (name, artist, champ, added_at,

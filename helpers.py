@@ -1,23 +1,7 @@
-import models
 import logging
-import pprint as pp
-import credentials
-import database
-from exceptions import LocalTrackError
 import os
-
-def setLoggingLevel(level):
-    logging.basicConfig(
-        level=level,
-        format='%(levelname)s : %(funcName)s @ %(lineno)s - %(message)s'
-    )
-
-def whodunit(id):
-    if id == "1163268620":
-        return "markus"
-    else:
-        return "thomas"
-
+from psycopg2 import DatabaseError
+import psycopg2.extras as pgextras
 
 class CoverageBot():
 
@@ -97,49 +81,85 @@ class CoverageBot():
 
 class DataHandler():
 
-    def __init__(self, spotify, connection):
-        self.spotify = spotify
-        self.connection = connection
+    def __init__(self, api, db_conn):
+        self.api = api
+        self.db_conn = db_conn
+        self.tracks_to_insert = []
+        self.audio_features = {}
+        self.rows_inserted = 0
 
-    def process_data(self, item):
-        # logging.debug(pp.pformat(item))
+    def process_result(self, result):
+        while True:
+            items_filtered = list(filter(lambda item: not item['track']['is_local'], result['items']))
+            self.store_audio_features(items_filtered)
+            for item in items_filtered:
+                self.add_track_to_bulk(item)
+
+            self.bulk_insert()
+            if not result['next']: break
+            result = self.api.next(result)
+
+    def store_audio_features(self, items):
+        track_ids = [item['track']['id'] for item in items]
+        audio_features_response = self.api.audio_features(track_ids)
+        for item in audio_features_response:
+            self.audio_features[item['id']] = {
+                'danceability': item['danceability'],
+                'energy': item['energy'],
+                'valence': item['valence'],
+                'tempo': item['tempo']
+            }
+
+    def reset_table(self, table):
+        db_cur = self.db_conn.cursor()
+        query = "DELETE FROM {}".format(table)
+        db_cur.execute(query)
+        logging.info('wipe table: {}'.format(table))
+
+        query = "ALTER SEQUENCE {}_id_seq RESTART".format(table)
+        db_cur.execute(query)
+        logging.info('reset id sequence on table: {}'.format(table))
+
+        self.db_conn.commit()
+        db_cur.close()
+
+    def bulk_insert(self):
+        query = '''
+            INSERT INTO {}
+                (name, artist, added_by_id, added_at, explicit,
+                release_date, release_date_precision, duration_ms,
+                popularity, danceability, energy, valence, tempo, link)
+            VALUES %s
+        '''.format(os.environ['DB_TABLE'])
+        db_cur = self.db_conn.cursor()
+
         try:
-            track = self.get_track_data(item)
-        except LocalTrackError as e:
-            logging.warning(e)
-        else:
-            logging.debug(track.toString())
-            track.insert(self.connection)
+            pgextras.execute_values(db_cur, query, self.tracks_to_insert)
+            self.db_conn.commit()
+            self.rows_inserted += db_cur.rowcount
+            logging.info('bulk_insert done: {} total rows inserted'.format(self.rows_inserted))
+        except (DatabaseError) as error:
+            logging.error(error)
+            self.db_conn.rollback()
 
-    def get_track_data(self, item):
-        track = item['track']
-        name = track['name']
+        db_cur.close()
+        self.tracks_to_insert = []
 
-        if item['is_local']:
-            database.increment_count_local_tracks(self.connection)
-            raise LocalTrackError('LOCAL TRACK NOT IMPORTED: {}'.format(name))
-
-        champ = whodunit(item['added_by']['id'])
-        added_raw = item['added_at']
-        added_at = item['added_at'][:10]
-        added_time = added_raw[11:-1]
-        artist_result = self.spotify.artist(track['artists'][0]['uri'])
-        explicit = track['explicit']
-        release_date = track['album']['release_date']
-        release_date_precision = track['album']['release_date_precision']
-        duration = track['duration_ms']
-        popularity = track['popularity']
-
-        features = self.spotify.audio_features(track['id'])[0]
-        danceability = features['danceability']
-        energy = features['energy']
-        valence = features['valence']
-        tempo = features['tempo']
-
-        # logging.debug(pp.pformat(artist_result))
-        # logging.debug(pp.pformat(features))
-
-        track = models.ActiveTrack(name, artist_result, champ, added_at, added_time,
-            explicit, release_date, release_date_precision, duration, popularity,
-            danceability, energy, valence, tempo)
-        return track
+    def add_track_to_bulk(self, item):
+        db_track = {
+            'name': item['track']['name'],
+            'artist': item['track']['artists'][0]['name'], # multiple artists
+            'added_by_id': item['added_by']['id'],
+            'added_at': item['added_at'],
+            'explicit': item['track']['explicit'],
+            'release_date': item['track']['album']['release_date'],
+            'release_date_precision': item['track']['album']['release_date_precision'],
+            'duration_ms': item['track']['duration_ms'],
+            'popularity': item['track']['popularity'],
+            'danceability': self.audio_features[item['track']['id']]['danceability'],
+            'energy': self.audio_features[item['track']['id']]['energy'],
+            'valence': self.audio_features[item['track']['id']]['valence'],
+            'tempo': self.audio_features[item['track']['id']]['tempo'],
+            'link': item['track']['external_urls']['spotify']
+        }
+        self.tracks_to_insert.append(tuple(db_track.values()))
