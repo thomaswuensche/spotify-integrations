@@ -1,6 +1,6 @@
 import spotipy
 import spotipy.util
-from helpers import DataHandler
+from controller import AnalyticsController
 import logging
 import os
 import psycopg2 as pg
@@ -34,9 +34,9 @@ if token:
         market="DE"
     )
 
-    data_handler = DataHandler(api, db_conn)
-    data_handler.reset_table(os.environ['DB_TABLE'])
-    data_handler.process_result(result)
+    controller = AnalyticsController(api, db_conn)
+    controller.reset_table(os.environ['DB_TABLE'])
+    controller.process_result(result)
 
     db_conn.close()
     logging.info('db connection closed')

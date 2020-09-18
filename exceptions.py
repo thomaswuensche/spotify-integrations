@@ -1,2 +1,0 @@
-class LocalTrackError(ValueError):
-    pass
