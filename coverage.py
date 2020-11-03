@@ -10,7 +10,7 @@ logging.basicConfig(
 )
 
 username = os.environ['SPOTIFY_USERNAME']
-scope = 'playlist-modify-private playlist-read-collaborative user-library-read'
+scope = 'playlist-modify-private playlist-read-private playlist-read-collaborative user-library-read'
 
 token = spotipy.util.prompt_for_user_token(
     username,

@@ -33,13 +33,22 @@ class CoverageController():
         logging.info('getting tracks from playlists...')
 
         if not self.covered_tracks:
-            user_playlists = self.api.user_playlists(self.username)
+            criteria = os.environ['PLAYLIST_CRITERIA'].split(',')
+            filtered_playlists = []
 
-            for playlist in user_playlists['items']:
-                if ('_' in playlist['name']) or ('//' in playlist['name']):
-                    logging.info(playlist['id'] + ' - ' + playlist['name'])
-                    result = self.api.user_playlist_tracks(self.username, playlist_id=playlist['id'])
-                    self.covered_tracks.update(self.extract_tracks(result))
+            result = self.api.user_playlists(self.username)
+            while True:
+                filtered_playlists += list(filter(
+                    lambda playlist: any(crit in playlist['name'] for crit in criteria) and playlist['owner']['id'] == os.environ['SPOTIFY_USERNAME'],
+                    result['items']
+                ))
+                if not result['next']: break
+                result = self.api.next(result)
+
+            for playlist in filtered_playlists:
+                logging.info(playlist['id'] + ' - ' + playlist['name'])
+                result = self.api.user_playlist_tracks(self.username, playlist_id=playlist['id'])
+                self.covered_tracks.update(self.extract_tracks(result))
 
         return self.covered_tracks
 
