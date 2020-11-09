@@ -25,7 +25,7 @@ if token:
     controller = CoverageController(api, username)
 
     logging.info('getting saved tracks...')
-    result_lib = api.current_user_saved_tracks()
+    result_lib = api.current_user_saved_tracks(limit=50)
     controller.process_coverage(
         result_lib,
         os.environ['PLAYLIST_LIB_COVERAGE'],

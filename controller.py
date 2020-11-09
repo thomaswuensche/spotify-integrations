@@ -11,6 +11,8 @@ class CoverageController():
 
     def process_coverage(self, result, destination_playlist):
         tracks_to_check = self.extract_tracks(result)
+        logging.info('tracks to check: ' + str(len(tracks_to_check)))
+
         covered_tracks = self.get_covered_tracks()
         flagged_tracks = self.get_flagged_tracks()
 
@@ -33,24 +35,28 @@ class CoverageController():
         logging.info('getting tracks from playlists...')
 
         if not self.covered_tracks:
-            criteria = os.environ['PLAYLIST_CRITERIA'].split(',')
-            filtered_playlists = []
 
-            result = self.api.user_playlists(self.username)
-            while True:
-                filtered_playlists += list(filter(
-                    lambda playlist: any(crit in playlist['name'] for crit in criteria) and playlist['owner']['id'] == os.environ['SPOTIFY_USERNAME'],
-                    result['items']
-                ))
-                if not result['next']: break
-                result = self.api.next(result)
-
-            for playlist in filtered_playlists:
-                logging.info(playlist['id'] + ' - ' + playlist['name'])
+            for playlist in self.get_filtered_playlists():
+                logging.debug(playlist['id'] + ' - ' + playlist['name'])
                 result = self.api.user_playlist_tracks(self.username, playlist_id=playlist['id'])
                 self.covered_tracks.update(self.extract_tracks(result))
 
         return self.covered_tracks
+
+    def get_filtered_playlists(self):
+        criteria = os.environ['PLAYLIST_CRITERIA'].split(',')
+        filtered_playlists = []
+
+        result = self.api.user_playlists(self.username)
+        while True:
+            filtered_playlists += list(filter(
+                lambda playlist: any(crit in playlist['name'] for crit in criteria) and playlist['owner']['id'] == os.environ['SPOTIFY_USERNAME'],
+                result['items']
+            ))
+            if not result['next']: break
+            result = self.api.next(result)
+
+        return filtered_playlists
 
     def extract_tracks(self, result):
         tracks = {}
