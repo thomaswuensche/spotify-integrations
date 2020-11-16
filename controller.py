@@ -11,13 +11,18 @@ class CoverageController():
 
     def process_coverage(self, result, destination_playlist):
         tracks_to_check = self.extract_tracks(result)
-        logging.info('tracks to check: ' + str(len(tracks_to_check)))
+
+        tracks_to_check_size = len(tracks_to_check)
+        logging.info(f'tracks to check: {tracks_to_check_size}')
 
         covered_tracks = self.get_covered_tracks()
         flagged_tracks = self.get_flagged_tracks()
 
         diff = list(set(tracks_to_check.keys()) - set(covered_tracks.keys()) - set(flagged_tracks.keys()))
-        logging.info('tracks not covered: ' + str(len(diff)))
+
+        diff_size = len(diff)
+        diff_percent = round(diff_size / tracks_to_check_size * 100)
+        logging.info(f'tracks not covered: {diff_size} ({diff_percent}%)')
 
         list_upload = self.sort_diff_tracks(diff, tracks_to_check)
         self.upload_that_shit(list_upload, destination_playlist)
@@ -71,7 +76,7 @@ class CoverageController():
         return tracks
 
     def sort_diff_tracks(self, diff, info_dict):
-        logging.info('sorting tracks by added at...')
+        logging.debug('sorting tracks by added at...')
         diff_with_added_at = {}
         for item in diff:
             diff_with_added_at[item] = info_dict[item]
