@@ -1,5 +1,5 @@
 import spotipy
-import spotipy.util
+from spotipy.oauth2 import SpotifyOAuth
 from controller import AnalyticsController
 import logging
 import os
@@ -13,33 +13,29 @@ logging.basicConfig(
 username = os.environ['SPOTIFY_USERNAME']
 scope = 'playlist-read-collaborative'
 
-token = spotipy.util.prompt_for_user_token(
-    username,
-    scope,
-    os.environ['CLIENT_ID'],
-    os.environ['CLIENT_SECRET'],
-    os.environ['REDIRECT_URI']
+auth = SpotifyOAuth(
+    client_id = os.environ['CLIENT_ID'],
+    client_secret = os.environ['CLIENT_SECRET'],
+    redirect_uri = os.environ['REDIRECT_URI'],
+    scope = scope,
+    username = username,
 )
 
-if token:
-    api = spotipy.Spotify(auth=token)
+api = spotipy.Spotify(auth_manager=auth)
 
-    db_conn = pg.connect(os.environ['DATABASE_URL'], sslmode='require')
-    logging.info('connected to db: ' + db_conn.dsn)
+db_conn = pg.connect(os.environ['DATABASE_URL'], sslmode='require')
+logging.info('connected to db: ' + db_conn.dsn)
 
-    result = api.user_playlist_tracks(
-        username,
-        playlist_id=os.environ['PLAYLIST_HS'],
-        limit=100,
-        market="DE"
-    )
+result = api.user_playlist_tracks(
+    username,
+    playlist_id=os.environ['PLAYLIST_HS'],
+    limit=100,
+    market="DE"
+)
 
-    controller = AnalyticsController(api, db_conn)
-    controller.reset_table(os.environ['DB_TABLE'])
-    controller.process_result(result)
+controller = AnalyticsController(api, db_conn)
+controller.reset_table(os.environ['DB_TABLE'])
+controller.process_result(result)
 
-    db_conn.close()
-    logging.info('db connection closed')
-
-else:
-    logging.error("Can't get token for", username)
+db_conn.close()
+logging.info('db connection closed')

@@ -35,13 +35,13 @@ class AnalyticsController():
             }
 
     def bulk_insert(self):
-        query = '''
+        query = """
             INSERT INTO {}
                 (name, artist, added_by_id, added_at, explicit,
                 release_date, release_date_precision, duration_ms,
                 popularity, danceability, energy, valence, tempo, link)
             VALUES %s
-        '''.format(os.environ['DB_TABLE'])
+        """.format(os.environ['DB_TABLE'])
         db_cur = self.db_conn.cursor()
 
         try:
