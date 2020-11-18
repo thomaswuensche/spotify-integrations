@@ -1,5 +1,5 @@
 import spotipy
-import spotipy.util
+from spotipy.oauth2 import SpotifyOAuth
 from controller import CoverageController
 import logging
 import os
@@ -12,31 +12,28 @@ logging.basicConfig(
 username = os.environ['SPOTIFY_USERNAME']
 scope = 'playlist-modify-private playlist-read-private playlist-read-collaborative user-library-read'
 
-token = spotipy.util.prompt_for_user_token(
-    username,
-    scope,
-    os.environ['CLIENT_ID'],
-    os.environ['CLIENT_SECRET'],
-    os.environ['REDIRECT_URI']
+auth = SpotifyOAuth(
+    client_id = os.environ['CLIENT_ID'],
+    client_secret = os.environ['CLIENT_SECRET'],
+    redirect_uri = os.environ['REDIRECT_URI'],
+    scope = scope,
+    username = username,
 )
 
-if token:
-    api = spotipy.Spotify(auth=token)
-    controller = CoverageController(api, username)
+api = spotipy.Spotify(auth_manager=auth)
 
-    logging.info('getting saved tracks...')
-    result_lib = api.current_user_saved_tracks(limit=50)
-    controller.process_coverage(
-        result_lib,
-        os.environ['PLAYLIST_LIB_COVERAGE'],
-    )
+controller = CoverageController(api, username)
 
-    logging.info('getting tracks from hs...')
-    result_hs = api.user_playlist_tracks(username, playlist_id=os.environ['PLAYLIST_HS'])
-    controller.process_coverage(
-        result_hs,
-        os.environ['PLAYLIST_HS_COVERAGE'],
-    )
+logging.info('getting saved tracks...')
+result_lib = api.current_user_saved_tracks(limit=50)
+controller.process_coverage(
+    result_lib,
+    os.environ['PLAYLIST_LIB_COVERAGE'],
+)
 
-else:
-    logging.error("Can't get token for", username)
+logging.info('getting tracks from hs...')
+result_hs = api.user_playlist_tracks(username, playlist_id=os.environ['PLAYLIST_HS'])
+controller.process_coverage(
+    result_hs,
+    os.environ['PLAYLIST_HS_COVERAGE'],
+)
