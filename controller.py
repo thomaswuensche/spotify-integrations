@@ -3,9 +3,8 @@ import os
 
 class CoverageController():
 
-    def __init__(self, api, username):
+    def __init__(self, api):
         self.api = api
-        self.username = username
         self.flagged_tracks = {}
         self.covered_tracks = {}
 
@@ -31,7 +30,7 @@ class CoverageController():
         logging.info('getting flagged tracks...')
 
         if not self.flagged_tracks:
-            result = self.api.user_playlist_tracks(self.username, playlist_id=os.environ['PLAYLIST_COVERAGE_FLAGGED'])
+            result = self.api.playlist_tracks(playlist_id=os.environ['PLAYLIST_COVERAGE_FLAGGED'])
             self.flagged_tracks = self.extract_tracks(result)
 
         return self.flagged_tracks
@@ -43,7 +42,7 @@ class CoverageController():
 
             for playlist in self.get_filtered_playlists():
                 logging.debug(playlist['id'] + ' - ' + playlist['name'])
-                result = self.api.user_playlist_tracks(self.username, playlist_id=playlist['id'])
+                result = self.api.playlist_tracks(playlist_id=playlist['id'])
                 self.covered_tracks.update(self.extract_tracks(result))
 
         return self.covered_tracks
@@ -52,7 +51,7 @@ class CoverageController():
         criteria = os.environ['PLAYLIST_CRITERIA'].split(',')
         filtered_playlists = []
 
-        result = self.api.user_playlists(self.username)
+        result = self.api.current_user_playlists()
         while True:
             filtered_playlists += list(filter(
                 lambda playlist: any(crit in playlist['name'] for crit in criteria) and playlist['owner']['id'] == os.environ['SPOTIFY_USERNAME'],
@@ -92,6 +91,6 @@ class CoverageController():
         logging.info('uploading tracks...')
         for i in range(0, len(list_upload), 100):
             if i == 0:
-                self.api.user_playlist_replace_tracks(self.username, playlist_id, list_upload[i : i+100])
+                self.api.playlist_replace_items(playlist_id, list_upload[i : i+100])
             else:
-                self.api.user_playlist_add_tracks(self.username, playlist_id, list_upload[i : i+100])
+                self.api.playlist_add_items(playlist_id, list_upload[i : i+100])
