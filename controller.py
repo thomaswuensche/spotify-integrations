@@ -5,8 +5,8 @@ class CoverageController():
 
     def __init__(self, api):
         self.api = api
-        self.flagged_tracks = {}
-        self.covered_tracks = {}
+        self.flagged_tracks = []
+        self.covered_tracks = []
 
     def process_coverage(self, result, destination_playlist):
         tracks_to_check = self.extract_tracks(result)
@@ -17,14 +17,20 @@ class CoverageController():
         covered_tracks = self.get_covered_tracks()
         flagged_tracks = self.get_flagged_tracks()
 
-        diff = list(set(tracks_to_check.keys()) - set(covered_tracks.keys()) - set(flagged_tracks.keys()))
+        ids_covered_tracks = [x['id'] for x in covered_tracks]
+        ids_flagged_tracks = [x['id'] for x in flagged_tracks]
+
+        diff = list(filter(
+            lambda track: track['id'] not in ids_covered_tracks and track['id'] not in ids_flagged_tracks,
+            tracks_to_check
+        ))
 
         diff_size = len(diff)
         diff_percent = round(diff_size / tracks_to_check_size * 100)
         logging.info(f'tracks not covered: {diff_size} ({diff_percent}%)')
 
-        list_upload = self.sort_diff_tracks(diff, tracks_to_check)
-        self.upload_that_shit(list_upload, destination_playlist)
+        sorted_diff = self.sort_diff_tracks(diff)
+        self.upload_that_shit(sorted_diff, destination_playlist)
 
     def get_flagged_tracks(self):
         logging.info('getting flagged tracks...')
@@ -39,11 +45,10 @@ class CoverageController():
         logging.info('getting tracks from playlists...')
 
         if not self.covered_tracks:
-
             for playlist in self.get_filtered_playlists():
                 logging.debug(playlist['id'] + ' - ' + playlist['name'])
                 result = self.api.playlist_tracks(playlist_id=playlist['id'])
-                self.covered_tracks.update(self.extract_tracks(result))
+                self.covered_tracks += self.extract_tracks(result)
 
         return self.covered_tracks
 
@@ -63,34 +68,36 @@ class CoverageController():
         return filtered_playlists
 
     def extract_tracks(self, result):
-        tracks = {}
+        tracks = []
         while True:
             for item in result['items']:
                 if not item['track']['is_local']:
-                    tracks[item['track']['id']] = item['added_at']
+                    track_data = {
+                        'id': item['track']['id'],
+                        'added_at': item['added_at']
+                    }
+                    tracks.append(track_data)
 
             if not result['next']: break
             result = self.api.next(result)
 
         return tracks
 
-    def sort_diff_tracks(self, diff, info_dict):
+    def sort_diff_tracks(self, diff):
         logging.debug('sorting tracks by added at...')
-        diff_with_added_at = {}
-        for item in diff:
-            diff_with_added_at[item] = info_dict[item]
 
-        sorted_tuples = sorted(diff_with_added_at.items(), reverse=True, key=lambda x: x[1])
-        list_upload = []
-        for item in sorted_tuples:
-            list_upload.append(item[0])
+        return sorted(
+            diff,
+            reverse = int(os.environ['COVERAGE_REVERSE']),
+            key = lambda track: track['added_at']
+        )
 
-        return list_upload
-
-    def upload_that_shit(self, list_upload, playlist_id):
+    def upload_that_shit(self, diff, playlist_id):
         logging.info('uploading tracks...')
-        for i in range(0, len(list_upload), 100):
+        ids_to_upload = [x['id'] for x in diff]
+
+        for i in range(0, len(ids_to_upload), 100):
             if i == 0:
-                self.api.playlist_replace_items(playlist_id, list_upload[i : i+100])
+                self.api.playlist_replace_items(playlist_id, ids_to_upload[i : i+100])
             else:
-                self.api.playlist_add_items(playlist_id, list_upload[i : i+100])
+                self.api.playlist_add_items(playlist_id, ids_to_upload[i : i+100])
