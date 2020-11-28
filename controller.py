@@ -30,13 +30,13 @@ class CoverageController():
         logging.info(f'tracks not covered: {diff_size} ({diff_percent}%)')
 
         sorted_diff = self.sort_diff_tracks(diff)
-        self.upload_that_shit(sorted_diff, destination_playlist)
+        self.upload_diff(sorted_diff, destination_playlist)
 
     def get_flagged_tracks(self):
         logging.info('getting flagged tracks...')
 
         if not self.flagged_tracks:
-            result = self.api.playlist_tracks(playlist_id=os.environ['PLAYLIST_COVERAGE_FLAGGED'])
+            result = self.api.playlist_tracks(os.environ['PLAYLIST_COVERAGE_FLAGGED'])
             self.flagged_tracks = self.extract_tracks(result)
 
         return self.flagged_tracks
@@ -47,7 +47,7 @@ class CoverageController():
         if not self.covered_tracks:
             for playlist in self.get_filtered_playlists():
                 logging.debug(playlist['id'] + ' - ' + playlist['name'])
-                result = self.api.playlist_tracks(playlist_id=playlist['id'])
+                result = self.api.playlist_tracks(playlist['id'])
                 self.covered_tracks += self.extract_tracks(result)
 
         return self.covered_tracks
@@ -92,12 +92,23 @@ class CoverageController():
             key = lambda track: track['added_at']
         )
 
-    def upload_that_shit(self, diff, playlist_id):
-        logging.info('uploading tracks...')
+    def upload_diff(self, diff, playlist):
         ids_to_upload = [x['id'] for x in diff]
 
-        for i in range(0, len(ids_to_upload), 100):
-            if i == 0:
-                self.api.playlist_replace_items(playlist_id, ids_to_upload[i : i+100])
-            else:
-                self.api.playlist_add_items(playlist_id, ids_to_upload[i : i+100])
+        if ids_to_upload:
+            logging.info('uploading tracks...')
+            for i in range(0, len(ids_to_upload), 100):
+                if i == 0:
+                    self.api.playlist_replace_items(playlist, ids_to_upload[i : i+100])
+                else:
+                    self.api.playlist_add_items(playlist, ids_to_upload[i : i+100])
+        else:
+            self.remove_all_from_playlist(playlist)
+
+    def remove_all_from_playlist(self, playlist):
+        result = self.api.playlist_tracks(playlist)
+        tracks_to_remove = self.extract_tracks(result)
+        ids_to_remove = [x['id'] for x in tracks_to_remove]
+
+        if tracks_to_remove:
+            self.api.playlist_remove_all_occurrences_of_items(playlist, ids_to_remove)
