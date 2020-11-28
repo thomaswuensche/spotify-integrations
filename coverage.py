@@ -15,8 +15,7 @@ controller.process_coverage(
     os.environ['PLAYLIST_LIB_COVERAGE'],
 )
 
-with open('playlists_to_check.json') as file:
-    playlists_to_check = json.loads(file.read())
+playlists_to_check = json.loads(os.environ['PLAYLISTS_TO_CHECK'])
 
 for playlist in playlists_to_check:
     logging.info(f"checking {playlist['name']} coverage")

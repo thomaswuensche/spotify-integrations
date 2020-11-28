@@ -18,7 +18,7 @@ def spotipy_client():
     try:
         cache = open(f'.cache-{username}')
         logging.debug('.cache exists')
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         logging.debug('.cache not found')
 
         data = {
