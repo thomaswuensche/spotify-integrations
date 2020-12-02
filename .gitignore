@@ -1,1 +1,6 @@
 .env
+playlists.json
+.cache*
+
+__pycache__
+.python-version
