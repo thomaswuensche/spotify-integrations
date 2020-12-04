@@ -10,7 +10,7 @@ api = util.spotipy_client()
 db_conn = pg.connect(os.environ['DATABASE_URL'], sslmode='require')
 logging.info(f'connected to db: {db_conn.dsn}')
 
-result = api.playlist_tracks(playlist_id=os.environ['PLAYLIST_HS'])
+result = api.playlist_tracks(os.environ['PLAYLIST_HS'])
 
 controller = AnalyticsController(api, db_conn)
 controller.reset_table(os.environ['DB_TABLE'])
