@@ -21,14 +21,18 @@ def spotipy_client():
     except FileNotFoundError:
         logging.debug('.cache not found')
 
-        data = {
-            'refresh_token': os.environ['REFRESH_TOKEN'],
-            'scope': scope,
-            'expires_at': int(time.time()) - 1
-        }
+        try:
+            data = {
+                'refresh_token': os.environ['REFRESH_TOKEN'],
+                'scope': scope,
+                'expires_at': int(time.time()) - 1
+            }
 
-        with open(f'.cache-{username}', 'w') as cache:
-            cache.write(json.dumps(data))
+            with open(f'.cache-{username}', 'w') as cache:
+                cache.write(json.dumps(data))
+        except KeyError:
+            logging.error('no REFRESH_TOKEN env var')
+
 
     auth = SpotifyOAuth(
         client_id = os.environ['CLIENT_ID'],
