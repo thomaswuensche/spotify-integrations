@@ -1,8 +1,11 @@
 import logging
 import os
 import json
-import util
 from controller import CoverageController
+
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import util
 
 util.set_logging_config()
 api = util.spotipy_client()
