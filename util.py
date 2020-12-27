@@ -13,7 +13,7 @@ def set_logging_config():
 
 def spotipy_client():
     username = os.environ['SPOTIFY_USERNAME']
-    scope = 'playlist-read-collaborative'
+    scope = 'playlist-modify-private playlist-read-private playlist-read-collaborative user-library-read'
 
     try:
         cache = open(f'.cache-{username}')

@@ -1,1 +1,1 @@
-web: python analytics.py
+web: python hs-analytics/analytics.py
