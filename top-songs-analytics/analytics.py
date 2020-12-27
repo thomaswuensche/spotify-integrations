@@ -16,7 +16,7 @@ logging.info(f'connected to db: {db_conn.dsn}')
 
 controller = AnalyticsController(api, db_conn)
 
-for playlist in json.loads(os.environ['PLAYLISTS']):
+for playlist in json.loads(os.environ['PLAYLISTS_TOP_SONGS']):
     result = api.playlist_tracks(playlist['playlist_id'])
     controller.process_result(result, playlist['username'])
 

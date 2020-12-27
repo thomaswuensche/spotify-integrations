@@ -36,7 +36,7 @@ class AnalyticsController():
 
     def bulk_insert(self):
         query = f"""
-            INSERT INTO {os.environ['DB_TABLE']}
+            INSERT INTO {os.environ['DB_TABLE_TOP_SONGS']}
                 (username, name, artist, explicit,
                 release_date, release_date_precision, duration_ms,
                 popularity, danceability, energy, valence, tempo, link)

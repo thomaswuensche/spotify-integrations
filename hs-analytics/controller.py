@@ -41,7 +41,7 @@ class AnalyticsController():
                 release_date, release_date_precision, duration_ms,
                 popularity, danceability, energy, valence, tempo, link)
             VALUES %s
-        """.format(os.environ['DB_TABLE'])
+        """.format(os.environ['DB_TABLE_HS'])
         db_cur = self.db_conn.cursor()
 
         try:

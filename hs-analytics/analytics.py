@@ -16,7 +16,7 @@ logging.info(f'connected to db: {db_conn.dsn}')
 result = api.playlist_tracks(os.environ['PLAYLIST_HS'])
 
 controller = AnalyticsController(api, db_conn)
-controller.reset_table(os.environ['DB_TABLE'])
+controller.reset_table(os.environ['DB_TABLE_HS'])
 controller.process_result(result)
 
 db_conn.close()
