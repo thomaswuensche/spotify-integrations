@@ -95,20 +95,17 @@ class CoverageController():
     def upload_diff(self, diff, playlist):
         ids_to_upload = [x['id'] for x in diff]
 
+        self.remove_all_from_playlist(playlist)
+
         if ids_to_upload:
             logging.info('uploading tracks...')
             for i in range(0, len(ids_to_upload), 100):
-                if i == 0:
-                    self.api.playlist_replace_items(playlist, ids_to_upload[i : i+100])
-                else:
-                    self.api.playlist_add_items(playlist, ids_to_upload[i : i+100])
-        else:
-            self.remove_all_from_playlist(playlist)
+                self.api.playlist_add_items(playlist, ids_to_upload[i : i+100])
 
     def remove_all_from_playlist(self, playlist):
         result = self.api.playlist_tracks(playlist)
         tracks_to_remove = self.extract_tracks(result)
         ids_to_remove = [x['id'] for x in tracks_to_remove]
 
-        if tracks_to_remove:
-            self.api.playlist_remove_all_occurrences_of_items(playlist, ids_to_remove)
+        for i in range(0, len(ids_to_remove), 100):
+            self.api.playlist_remove_all_occurrences_of_items(playlist, ids_to_remove[i : i+100])
