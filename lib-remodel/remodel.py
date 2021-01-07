@@ -1,7 +1,6 @@
 import logging
 import os
-
-# TODO: remove pformat import
+import time
 from pprint import pformat
 
 import sys, os
@@ -49,7 +48,7 @@ playlist_tracks = []
 
 logging.info('getting tracks in playlists...')
 for playlist in filtered_playlists:
-    logging.info(playlist['name'])
+    logging.debug(playlist['name'])
     result = api.playlist_tracks(playlist['id'])
     playlist_tracks += extract_tracks(result)
 
@@ -73,13 +72,20 @@ diff = sorted(
 
 unique_diff = []
 for track in diff:
-     if not track['id'] in [track['id'] for track in unique_diff]:
-         unique_diff.append(track)
+    if not track['id'] in [track['id'] for track in unique_diff]:
+        unique_diff.append(track)
+
 
 logging.info('writing tracks to file...')
-with open(f'{os.path.dirname(os.path.abspath(__file__))}/all_tracks.txt', 'w') as file:
-    file.write(pformat(diff))
 with open(f'{os.path.dirname(os.path.abspath(__file__))}/tracks.txt', 'w') as file:
     file.write(pformat(unique_diff))
 
+
 # add diff to library
+ids_to_save = [track['id'] for track in unique_diff]
+if ids_to_save:
+    logging.info('saving tracks...')
+    for i in range(0, len(ids_to_save)):
+        if i % 20 == 0: logging.info(f'{i} done')
+        api.current_user_saved_tracks_add([ids_to_save[i]])
+        time.sleep(1)
