@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 
 class CoverageController():
 
@@ -7,14 +8,15 @@ class CoverageController():
         self.api = api
         self.flagged_tracks = []
         self.covered_tracks = []
+        self.last_criteria = None
 
-    def process_coverage(self, result, destination_playlist):
+    def process_coverage(self, result, coverage_criteria, destination_playlist):
         tracks_to_check = self.extract_tracks(result)
 
         tracks_to_check_size = len(tracks_to_check)
         logging.info(f'tracks to check: {tracks_to_check_size}')
 
-        covered_tracks = self.get_covered_tracks()
+        covered_tracks = self.get_covered_tracks(coverage_criteria)
         flagged_tracks = self.get_flagged_tracks()
 
         ids_covered_tracks = [x['id'] for x in covered_tracks]
@@ -41,25 +43,28 @@ class CoverageController():
 
         return self.flagged_tracks
 
-    def get_covered_tracks(self):
-        logging.info('getting tracks from playlists...')
+    def get_covered_tracks(self, criteria):
 
-        if not self.covered_tracks:
-            for playlist in self.get_filtered_playlists():
+        if self.last_criteria != criteria:
+            logging.info('getting tracks from playlists...')
+            self.covered_tracks = []
+            for playlist in self.get_filtered_playlists(criteria):
                 logging.debug(playlist['id'] + ' - ' + playlist['name'])
                 result = self.api.playlist_tracks(playlist['id'])
                 self.covered_tracks += self.extract_tracks(result)
+        else:
+            logging.info('using cached covered_tracks')
 
+        self.last_criteria = criteria
         return self.covered_tracks
 
-    def get_filtered_playlists(self):
-        criteria = os.environ['PLAYLIST_CRITERIA'].split(',')
+    def get_filtered_playlists(self, criteria):
         filtered_playlists = []
 
         result = self.api.current_user_playlists()
         while True:
             filtered_playlists += list(filter(
-                lambda playlist: any(crit in playlist['name'] for crit in criteria) and playlist['owner']['id'] == os.environ['SPOTIFY_USERNAME'],
+                lambda playlist: re.search(criteria, playlist['name']) and playlist['owner']['id'] == os.environ['SPOTIFY_USERNAME'],
                 result['items']
             ))
             if not result['next']: break
@@ -95,6 +100,7 @@ class CoverageController():
     def upload_diff(self, diff, playlist):
         ids_to_upload = [x['id'] for x in diff]
 
+        logging.info('removing all tracks from coverage playlist...')
         self.remove_all_from_playlist(playlist)
 
         if ids_to_upload:
