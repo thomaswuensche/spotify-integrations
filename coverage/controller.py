@@ -70,6 +70,11 @@ class CoverageController():
             if not result['next']: break
             result = self.api.next(result)
 
+        excluded_playlists = os.environ['COVERAGE_EXCLUDE'].split(',')
+        filtered_playlists = list(filter(
+            lambda playlist: all(playlist['name'] != name for name in excluded_playlists),
+            filtered_playlists
+        ))
         return filtered_playlists
 
     def extract_tracks(self, result):
