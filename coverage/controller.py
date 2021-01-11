@@ -10,8 +10,14 @@ class CoverageController():
         self.covered_tracks = []
         self.last_criteria = None
 
-    def process_coverage(self, result, coverage_criteria, destination_playlist):
+    def process_coverage(self, result, coverage_criteria, destination_playlist, min_date=None):
         tracks_to_check = self.extract_tracks(result)
+
+        if min_date:
+            tracks_to_check = list(filter(
+                lambda track: track['added_at'] >= min_date,
+                tracks_to_check
+            ))
 
         tracks_to_check_size = len(tracks_to_check)
         logging.info(f'tracks to check: {tracks_to_check_size}')
