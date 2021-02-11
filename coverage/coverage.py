@@ -23,7 +23,7 @@ controller.process_coverage(
 logging.info('checking library coverage')
 controller.process_coverage(
     result = result_lib,
-    coverage_criteria = '^(_?\d{2}_\w+|^//\w+)$',
+    coverage_criteria = '^([_+]?\d{2}_\w+|^//\w+)$',
     destination_playlist = os.environ['PLAYLIST_LIB_COVERAGE']
 )
 
@@ -34,6 +34,6 @@ for playlist in playlists_to_check:
     result_playlist = api.playlist_tracks(playlist['playlist_id'])
     controller.process_coverage(
         result = result_playlist,
-        coverage_criteria = '^(_?\d{2}_\w+|^//\w+)$',
+        coverage_criteria = '^([_+]?\d{2}_\w+|^//\w+)$',
         destination_playlist = playlist['coverage_id']
     )
