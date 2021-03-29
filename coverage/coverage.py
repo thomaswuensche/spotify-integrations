@@ -3,16 +3,14 @@ import os
 import json
 from controller import CoverageController
 
-import sys, os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import sys, os; sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import util
 
 util.set_logging_config()
-api = util.spotipy_client()
-controller = CoverageController(api)
+controller = CoverageController()
 
 logging.info('checking timeline coverage')
-result_lib = api.current_user_saved_tracks(limit=50)
+result_lib = controller.current_user_saved_tracks(limit=50)
 controller.process_coverage(
     result = result_lib,
     coverage_criteria = '^\w\.\d{2}(\.\d{2})?$',
@@ -31,7 +29,7 @@ playlists_to_check = json.loads(os.environ['PLAYLISTS_TO_CHECK'])
 
 for playlist in playlists_to_check:
     logging.info(f"checking {playlist['name']} coverage")
-    result_playlist = api.playlist_tracks(playlist['playlist_id'])
+    result_playlist = controller.playlist_tracks(playlist['playlist_id'])
     controller.process_coverage(
         result = result_playlist,
         coverage_criteria = '^([_+]?\d{2}_\w+|^//\w+)$',

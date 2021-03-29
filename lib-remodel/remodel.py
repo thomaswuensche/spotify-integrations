@@ -6,9 +6,10 @@ from pprint import pformat
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import util
+from client import SpotifyClient
 
 util.set_logging_config()
-api = util.spotipy_client()
+api = SpotifyClient()
 
 def extract_tracks(result):
     tracks = []

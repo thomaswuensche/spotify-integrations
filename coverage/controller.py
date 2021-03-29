@@ -2,10 +2,13 @@ import logging
 import os
 import re
 
-class CoverageController():
+import sys, os; sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from spotify_client import SpotifyClient
 
-    def __init__(self, api):
-        self.api = api
+class CoverageController(SpotifyClient):
+
+    def __init__(self):
+        super().__init__()
         self.flagged_tracks = []
         self.covered_tracks = []
         self.last_criteria = None
@@ -44,7 +47,7 @@ class CoverageController():
         logging.info('getting flagged tracks...')
 
         if not self.flagged_tracks:
-            result = self.api.playlist_tracks(os.environ['PLAYLIST_COVERAGE_FLAGGED'])
+            result = self.playlist_tracks(os.environ['PLAYLIST_COVERAGE_FLAGGED'])
             self.flagged_tracks = self.extract_tracks(result)
 
         return self.flagged_tracks
@@ -56,7 +59,7 @@ class CoverageController():
             self.covered_tracks = []
             for playlist in self.get_filtered_playlists(criteria):
                 logging.debug(playlist['id'] + ' - ' + playlist['name'])
-                result = self.api.playlist_tracks(playlist['id'])
+                result = self.playlist_tracks(playlist['id'])
                 self.covered_tracks += self.extract_tracks(result)
         else:
             logging.info('using cached covered_tracks')
@@ -67,14 +70,14 @@ class CoverageController():
     def get_filtered_playlists(self, criteria):
         filtered_playlists = []
 
-        result = self.api.current_user_playlists()
+        result = self.current_user_playlists()
         while True:
             filtered_playlists += list(filter(
                 lambda playlist: re.search(criteria, playlist['name']) and playlist['owner']['id'] == os.environ['SPOTIFY_USERNAME'],
                 result['items']
             ))
             if not result['next']: break
-            result = self.api.next(result)
+            result = self.next(result)
 
         excluded_playlists = os.environ['COVERAGE_EXCLUDE'].split(',')
         filtered_playlists = list(filter(
@@ -95,7 +98,7 @@ class CoverageController():
                     tracks.append(track_data)
 
             if not result['next']: break
-            result = self.api.next(result)
+            result = self.next(result)
 
         return tracks
 
@@ -117,12 +120,12 @@ class CoverageController():
         if ids_to_upload:
             logging.info('uploading tracks...')
             for i in range(0, len(ids_to_upload), 100):
-                self.api.playlist_add_items(playlist, ids_to_upload[i : i+100])
+                self.playlist_add_items(playlist, ids_to_upload[i : i+100])
 
     def remove_all_from_playlist(self, playlist):
-        result = self.api.playlist_tracks(playlist)
+        result = self.playlist_tracks(playlist)
         tracks_to_remove = self.extract_tracks(result)
         ids_to_remove = [x['id'] for x in tracks_to_remove]
 
         for i in range(0, len(ids_to_remove), 100):
-            self.api.playlist_remove_all_occurrences_of_items(playlist, ids_to_remove[i : i+100])
+            self.playlist_remove_all_occurrences_of_items(playlist, ids_to_remove[i : i+100])

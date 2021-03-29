@@ -3,10 +3,13 @@ import os
 from psycopg2 import DatabaseError
 import psycopg2.extras as pgextras
 
-class AnalyticsController():
+import sys, os; sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from spotify_client import SpotifyClient
 
-    def __init__(self, api, db_conn):
-        self.api = api
+class AnalyticsController(SpotifyClient):
+
+    def __init__(self, db_conn):
+        super().__init__()
         self.db_conn = db_conn
         self.tracks_to_insert = []
         self.audio_features = {}
@@ -21,11 +24,11 @@ class AnalyticsController():
 
             self.bulk_insert()
             if not result['next']: break
-            result = self.api.next(result)
+            result = self.next(result)
 
     def store_audio_features(self, items):
         track_ids = [item['track']['id'] for item in items]
-        audio_features_response = self.api.audio_features(track_ids)
+        audio_features_response = super().audio_features(track_ids)
         for item in audio_features_response:
             self.audio_features[item['id']] = {
                 'danceability': item['danceability'],
@@ -48,7 +51,7 @@ class AnalyticsController():
             pgextras.execute_values(db_cur, query, self.tracks_to_insert)
             self.db_conn.commit()
             self.rows_inserted += db_cur.rowcount
-            logging.info('bulk_insert done: {} total rows inserted'.format(self.rows_inserted))
+            logging.info(f'bulk_insert done: {self.rows_inserted} total rows inserted')
         except (DatabaseError) as error:
             logging.error(error)
             self.db_conn.rollback()
