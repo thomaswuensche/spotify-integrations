@@ -15,7 +15,7 @@ controller.process_coverage(
     result = result_lib,
     coverage_criteria = '^\w\.\d{2}(\.\d{2})?$',
     destination_playlist = os.environ['PLAYLIST_TIMELINE_COVERAGE'],
-    min_date = '2020-01-01'
+    min_date = os.environ['TIMELINE_MIN_DATE']
 )
 
 logging.info('checking library coverage')
