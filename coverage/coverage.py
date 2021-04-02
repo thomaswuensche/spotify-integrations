@@ -9,29 +9,15 @@ import util
 util.set_logging_config()
 controller = CoverageController()
 
-logging.info('checking timeline coverage')
-result_lib = controller.current_user_saved_tracks(limit=50)
-controller.process_coverage(
-    result = result_lib,
-    coverage_criteria = '^\w\.\d{2}(\.\d{2})?$',
-    destination_playlist = os.environ['PLAYLIST_TIMELINE_COVERAGE'],
-    min_date = os.environ['TIMELINE_MIN_DATE']
-)
+with open(os.path.abspath(f'{os.path.dirname(__file__)}/tasks.json')) as file:
+    tasks = file.read().replace('hs_id', os.environ['PLAYLIST_HS'])
+    for task in json.loads(tasks):
+        logging.info(task['name'])
 
-logging.info('checking library coverage')
-controller.process_coverage(
-    result = result_lib,
-    coverage_criteria = '^([_+]?\d{2}_\w+|^//\w+)$',
-    destination_playlist = os.environ['PLAYLIST_LIB_COVERAGE']
-)
-
-playlists_to_check = json.loads(os.environ['PLAYLISTS_TO_CHECK'])
-
-for playlist in playlists_to_check:
-    logging.info(f"checking {playlist['name']} coverage")
-    result_playlist = controller.playlist_tracks(playlist['playlist_id'])
-    controller.process_coverage(
-        result = result_playlist,
-        coverage_criteria = '^([_+]?\d{2}_\w+|^//\w+)$',
-        destination_playlist = playlist['coverage_id']
-    )
+        controller.check_coverage(
+            origin = task['origin'],
+            check_against = task['check_against'],
+            diff_pl = task['diff_pl'],
+            min_date = task['min_date'],
+            type = task['type']
+        )

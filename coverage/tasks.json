@@ -1,0 +1,43 @@
+[{
+    "name": "library > playlists",
+    "origin": "library",
+    "check_against": "^([_+]?\\d{2}_\\w+|^//\\w+)$",
+    "diff_pl": "1D6xkvZWaikkFBCNtPT63q",
+    "min_date": null,
+    "type": "regex"
+}, {
+    "name": "library > timeline",
+    "origin": "library",
+    "check_against": "^\\w\\.\\d{2}(\\.\\d{2})?$",
+    "diff_pl": "4mxlgzY6qlVmJ7GaYXYGO8",
+    "min_date": "2021-01-08",
+    "type": "regex"
+}, {
+    "name": "library > hs",
+    "origin": "library",
+    "check_against": "hs_id",
+    "diff_pl": "4X4YFIBiM1Trwi9nnp2f7C",
+    "min_date": null,
+    "type": "playlist"
+}, {
+    "name": "hs > playlists",
+    "origin": "hs_id",
+    "check_against": "^([_+]?\\d{2}_\\w+|^//\\w+)$",
+    "diff_pl": "1RUo8WtwUnD6ITVsLNUXl0",
+    "min_date": null,
+    "type": "regex"
+}, {
+    "name": "swr1 > playlists",
+    "origin": "0yiODuUK8CsnuRqNuuoQ2j",
+    "check_against": "^([_+]?\\d{2}_\\w+|^//\\w+)$",
+    "diff_pl": "1eOZgO3NE0vl3A4ffIm6hj",
+    "min_date": null,
+    "type": "regex"
+}, {
+    "name": "dlf nova > playlists",
+    "origin": "7ExcUJvm8A33j28Yvw4UZj",
+    "check_against": "^([_+]?\\d{2}_\\w+|^//\\w+)$",
+    "diff_pl": "0yo7Gg84SNV8anGNIvIPYG",
+    "min_date": null,
+    "type": "regex"
+}]
