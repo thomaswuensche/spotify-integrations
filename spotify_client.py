@@ -19,7 +19,7 @@ class SpotifyClient(Spotify):
         ]
         scope = ' '.join(scopes)
 
-        self.check_cache()
+        self.check_cache(scope)
 
         auth = SpotifyOAuth(
             client_id = os.environ['CLIENT_ID'],
@@ -31,7 +31,7 @@ class SpotifyClient(Spotify):
 
         super().__init__(auth_manager=auth)
 
-    def check_cache(self):
+    def check_cache(self, scope):
         cache_path = os.path.abspath(f'{os.path.dirname(__file__)}/.cache-{self.username}')
 
         try:
