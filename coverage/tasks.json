@@ -20,12 +20,12 @@
     "min_date": null,
     "type": "playlist"
 }, {
-    "name": "hs > playlists",
+    "name": "hs > library",
     "origin": "hs_id",
-    "check_against": "^([_+]?\\d{2}_\\w+|^//\\w+)$",
+    "check_against": "library",
     "diff_pl": "1RUo8WtwUnD6ITVsLNUXl0",
     "min_date": null,
-    "type": "regex"
+    "type": "playlist"
 }, {
     "name": "swr1 > playlists",
     "origin": "0yiODuUK8CsnuRqNuuoQ2j",
