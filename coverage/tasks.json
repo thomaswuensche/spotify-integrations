@@ -27,6 +27,13 @@
     "min_date": null,
     "type": "playlist"
 }, {
+    "name": "top > timeline",
+    "origin": "top_tracks:short_term",
+    "check_against": "timeline_current",
+    "diff_pl": "6f1u5X5rIMhToeEoiV73Mj",
+    "min_date": null,
+    "type": "logic"
+}, {
     "name": "swr1 > playlists",
     "origin": "0yiODuUK8CsnuRqNuuoQ2j",
     "check_against": "^([_+]?\\d{2}_\\w+|^//\\w+)$",

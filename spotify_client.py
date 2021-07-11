@@ -30,6 +30,7 @@ class SpotifyClient(Spotify):
         )
 
         super().__init__(auth_manager=auth)
+        self.user_playlists = self.get_user_playlists()
 
     def check_cache(self, scope):
         cache_path = os.path.abspath(f'{os.path.dirname(__file__)}/.cache-{self.username}')
@@ -50,3 +51,30 @@ class SpotifyClient(Spotify):
                     cache.write(json.dumps(data))
             except KeyError:
                 logging.error('no REFRESH_TOKEN env var')
+
+    def get_user_playlists(self):
+        user_playlists = []
+        result = self.current_user_playlists()
+        while True:
+            for playlist in result['items']:
+                user_playlists.append({
+                    'id': playlist['id'],
+                    'name': playlist['name'],
+                    'owner': playlist['owner']['id']
+                })
+            if not result['next']: break
+            result = self.next(result)
+
+        return user_playlists
+
+    def id_origin(self, id):
+        if id == 'me' or id == 'library':
+            return 'library'
+        elif id.startswith('top_tracks'):
+            return f"top tracks ({id.split(':')[-1]})"
+        else:
+            return next(filter(lambda playlist: playlist['id'] == id, self.user_playlists))['name']
+
+    def result_origin(self, result):
+        id = result['href'].rsplit('/')[-2]
+        return self.id_origin(id)

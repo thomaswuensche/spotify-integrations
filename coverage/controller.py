@@ -24,18 +24,8 @@ class CoverageController(SpotifyClient):
         tracks_to_check_size = len(tracks_to_check)
         logging.info(f'tracks to check: {tracks_to_check_size}')
 
-        if type == 'playlist':
-            covered_tracks = self.extract_tracks(check_against)
-        else:
-            covered_tracks = self.get_covered_tracks(check_against)
-
-        flagged_tracks = self.extract_tracks(
-            os.environ['PLAYLIST_COVERAGE_FLAGGED'],
-            verbose = False
-        )
-
-        ids_covered_tracks = [x['id'] for x in covered_tracks]
-        ids_flagged_tracks = [x['id'] for x in flagged_tracks]
+        ids_covered_tracks = self.get_covered_ids(type, check_against)
+        ids_flagged_tracks = self.get_flagged_ids()
 
         diff_tracks = list(filter(
             lambda track: track['id'] not in ids_covered_tracks and track['id'] not in ids_flagged_tracks,
@@ -46,71 +36,86 @@ class CoverageController(SpotifyClient):
         diff_percent = round(diff_size / tracks_to_check_size * 100)
         logging.info(f'tracks not covered: {diff_size} ({diff_percent}%)')
 
-        sorted_diff = self.sort_diff_tracks(diff_tracks)
-        self.upload_diff(sorted_diff, diff_pl)
+        if not origin.startswith('top_tracks'):
+            diff_tracks = self.sort_diff_tracks(diff_tracks)
 
-    def get_covered_tracks(self, criteria):
+        self.upload_diff(diff_tracks, diff_pl)
+
+    def get_covered_ids(self, type, check_against):
+        if type == 'regex':
+            covered_tracks = self.get_covered_tracks_regex(check_against)
+        elif type == 'logic':
+            covered_tracks = self.get_covered_tracks_logic(check_against)
+        else:
+            covered_tracks = self.extract_tracks(check_against)
+        return [x['id'] for x in covered_tracks]
+
+    def get_covered_tracks_regex(self, regex):
         logging.info('getting tracks from playlists...')
         covered_tracks = []
-        for playlist in self.get_filtered_playlists(criteria):
+        for playlist in self.get_filtered_playlists(regex):
             covered_tracks += self.extract_tracks(
                 playlist['id'],
                 verbose = False
             )
-
         return covered_tracks
 
-    def get_user_playlists(self):
-        self.user_playlists = []
-        result = self.current_user_playlists()
-        while True:
-            for playlist in result['items']:
-                self.user_playlists.append({
-                    'id': playlist['id'],
-                    'name': playlist['name'],
-                    'owner': playlist['owner']['id']
-                })
-            if not result['next']: break
-            result = self.next(result)
+    def get_covered_tracks_logic(self, check_against):
+        if check_against == 'timeline_current':
+            return self.get_covered_tracks_timeline_current()
 
-    def get_filtered_playlists(self, criteria):
-        filtered_playlists = []
+    def get_covered_tracks_timeline_current(self):
+        timeline_playlists = self.get_filtered_playlists('^\\w\\.\\d{2}(\\.\\d{2})?$')
+        timeline_order = ['w', 'f', 's', 'h']
+        timeline_playlists = sorted(
+            timeline_playlists,
+            key = lambda playlist: f"{playlist['name'].split('.')[-1]}-{timeline_order.index(playlist['name'].split('.')[0])}"
+        )
+        return self.extract_tracks(timeline_playlists[-1]['id'])
 
-        result = self.current_user_playlists()
-        while True:
-            filtered_playlists += list(filter(
-                lambda playlist: re.search(criteria, playlist['name']) and playlist['owner'] == os.environ['SPOTIFY_USERNAME'],
-                self.user_playlists
-            ))
-            if not result['next']: break
-            result = self.next(result)
+    def get_flagged_ids(self):
+        flagged_tracks = self.extract_tracks(
+            os.environ['PLAYLIST_COVERAGE_FLAGGED'],
+            verbose = False
+        )
+        return [x['id'] for x in flagged_tracks]
+
+    def get_filtered_playlists(self, regex):
+        filtered_playlists = list(filter(
+            lambda playlist: re.search(regex, playlist['name']) and playlist['owner'] == os.environ['SPOTIFY_USERNAME'],
+            self.user_playlists
+        ))
 
         excluded_playlists = os.environ['COVERAGE_EXCLUDE'].split(',')
-        filtered_playlists = list(filter(
+        return list(filter(
             lambda playlist: all(playlist['name'] != name for name in excluded_playlists),
             filtered_playlists
         ))
-        return filtered_playlists
 
     def extract_tracks(self, id, verbose=True):
-        if id not in self.cache:
+        if id in self.cache:
+            if verbose: logging.info(f'using cached tracks from {self.id_origin(id)}...')
+        else:
             if id == 'library':
                 result = self.current_user_saved_tracks(limit=50)
-                name = 'library'
+            elif id.startswith('top_tracks'):
+                result = self.current_user_top_tracks(limit=50, time_range=id.split(':')[-1])
             else:
                 result = self.playlist_tracks(id)
-                name = next(filter(lambda playlist: playlist['id'] == id, self.user_playlists))['name']
 
-            if verbose: logging.info(f"extracting tracks from {name}...")
+            if verbose: logging.info(f'extracting tracks from {self.id_origin(id)}...')
 
             tracks = []
             while True:
                 for item in result['items']:
-                    if not item['track']['is_local']:
-                        tracks.append({
-                            'id': item['track']['id'],
-                            'added_at': item['added_at']
-                        })
+                    if 'track' in item:
+                        if not item['track']['is_local']:
+                            tracks.append({
+                                'id': item['track']['id'],
+                                'added_at': item['added_at']
+                            })
+                    else:
+                        tracks.append({'id': item['id']})
 
                 if not result['next']: break
                 result = self.next(result)
