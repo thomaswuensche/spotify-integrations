@@ -67,6 +67,31 @@ class SpotifyClient(Spotify):
 
         return user_playlists
 
+    def extract_tracks(self, result):
+        logging.info(f'getting tracks from {self.result_origin(result)}...')
+        extracted_tracks = []
+
+        while True:
+            extracted_tracks += self.filter_result(result)
+            if not result['next']: break
+            result = self.next(result)
+
+        return extracted_tracks
+
+    def filter_result(self, result):
+        if 'track' in result['items'][0]:
+            return list(filter(lambda item: not item['track']['is_local'], result['items']))
+        else:
+            return list(filter(lambda track: not track['is_local'], result['items']))
+
+    def store_audio_features(self, tracks):
+        track_ids = [track.id for track in tracks]
+        for i in range(0, len(tracks), 100):
+            for item in self.audio_features(track_ids[i : i+100]):
+                track = next(filter(lambda track: track.id == item['id'], tracks))
+                track.set_audio_features(item)
+        return tracks
+
     def id_origin(self, id):
         if id == 'me' or id == 'library':
             return 'library'

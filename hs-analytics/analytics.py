@@ -1,23 +1,18 @@
-import logging
 import os
-import psycopg2 as pg
-from controller import AnalyticsController
 
-import sys, os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import sys, os; sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import util
+from db_controller import DatabaseController
+from spotify_client import SpotifyClient
+from models.hs_track import HSTrack
 
 util.set_logging_config()
+db = DatabaseController()
+api = SpotifyClient()
 
-db_conn = pg.connect(os.environ['DATABASE_URL'], sslmode='require')
-logging.info(f'connected to db: {db_conn.dsn}')
+result = api.playlist_tracks(os.environ['PLAYLIST_HS'])
+tracks = [HSTrack(track) for track in api.extract_tracks(result)]
+tracks = api.store_audio_features(tracks)
+HSTrack.bulk_insert(db, tracks)
 
-controller = AnalyticsController(db_conn)
-controller.reset_table(os.environ['DB_TABLE_HS'])
-controller.save_tracks(
-    playlist = os.environ['PLAYLIST_HS'],
-    destination_table = os.environ['DB_TABLE_HS']
-)
-
-db_conn.close()
-logging.info('db connection closed')
+db.close_conn()
