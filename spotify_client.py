@@ -95,6 +95,8 @@ class SpotifyClient(Spotify):
     def id_origin(self, id):
         if id == 'me' or id == 'library':
             return 'library'
+        elif id == 'top':
+            return 'top'
         elif id.startswith('top_tracks'):
             return f"top tracks ({id.split(':')[-1]})"
         else:
