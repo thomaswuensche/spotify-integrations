@@ -6,4 +6,4 @@ tracks.txt
 __pycache__/
 .python-version
 
-rolling-top/20*
+top-analytics/20*
