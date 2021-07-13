@@ -22,7 +22,7 @@ class DatabaseController():
             self.close_conn()
             raise TypeError('all items must be of same type for bulk_insert')
 
-        items_to_insert = self.filter_items_to_insert(items, table)
+        items_to_insert = self.get_filtered_items_to_insert(items, table)
 
         if items_to_insert:
             logging.info(f'bulk insert of {len(items_to_insert)} items to {table}...')
@@ -59,13 +59,58 @@ class DatabaseController():
         colnames_str = ', '.join(colnames)
         return pg.sql.SQL(f'INSERT INTO {table} ({colnames_str}) VALUES %s')
 
-    def filter_items_to_insert(self, items, table):
+    def get_filtered_items_to_insert(self, items, table):
+        pkey_columns = self.get_pkey_columns(table)
+        pkey_columns_str = self.get_pkey_columns_str(pkey_columns)
+
         cur = self.db_conn.cursor()
-        query = pg.sql.SQL(f'SELECT id FROM {table}')
+        query = pg.sql.SQL(f'SELECT {pkey_columns_str} FROM {table}')
         cur.execute(query)
-        existing_ids = [entry[0] for entry in cur.fetchall()]
+
+        existing_records = self.get_existing_records(cur.fetchall(), pkey_columns)
         cur.close()
-        return [vars(item) for item in items if item.id not in existing_ids]
+
+        return self.get_item_dicts_not_in_existing_records(items, existing_records, pkey_columns)
+
+    def get_existing_records(self, entries, pkey_columns):
+        existing_records = []
+        for entry in entries:
+            record = {}
+            for index, col in enumerate(entry):
+                record[pkey_columns[index]] = entry[index]
+            existing_records.append(record)
+        return existing_records
+
+    def get_item_dicts_not_in_existing_records(self, items, existing_records, pkey_columns):
+        items_to_insert = []
+        for item in items:
+            item_dict = vars(item)
+            item_dict_pkey_columns = {}
+            for column in pkey_columns:
+                item_dict_pkey_columns[column] = item_dict[column]
+            if item_dict_pkey_columns not in existing_records:
+                items_to_insert.append(item_dict)
+        return items_to_insert
+
+    def get_pkey_columns(self, table):
+        cur = self.db_conn.cursor()
+        query_string = f"""SELECT a.attname
+            FROM pg_index i
+            JOIN pg_attribute a
+                ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+            WHERE i.indrelid = '{table}'::regclass
+                AND i.indisprimary"""
+        query = pg.sql.SQL(query_string)
+        cur.execute(query)
+        pkey_columns = [entry[0] for entry in cur.fetchall()]
+        cur.close()
+        return pkey_columns
+
+    def get_pkey_columns_str(self, pkey_columns):
+        if len(pkey_columns) > 1:
+            return ', '.join(pkey_columns)
+        else:
+            return pkey_columns[0]
 
     def delete_table(self, table):
         cur = self.db_conn.cursor()

@@ -1,3 +1,4 @@
+from datetime import datetime
 from .track import Track
 
 class HSTrack(Track):
@@ -8,6 +9,6 @@ class HSTrack(Track):
         db.bulk_insert('tracks_hs', tracks)
 
     def __init__(self, result_item):
-        super().__init__(result_item)
+        super().__init__(result_item['track'])
         self.added_by = result_item['added_by']['id']
-        self.added_at = result_item['added_at']
+        self.added_at = datetime.strptime(result_item['added_at'], '%Y-%m-%dT%H:%M:%SZ')

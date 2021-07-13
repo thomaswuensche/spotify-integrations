@@ -14,16 +14,16 @@ class Track():
 
         return tracks_deduped
 
-    def __init__(self, result_item):
-        self.id = result_item['track']['id']
-        self.name = result_item['track']['name']
-        self.artist = result_item['track']['artists'][0]['name']
-        self.explicit = result_item['track']['explicit']
-        self.release_date = result_item['track']['album']['release_date']
-        self.release_date_precision = result_item['track']['album']['release_date_precision']
-        self.duration_ms = result_item['track']['duration_ms']
-        self.popularity = result_item['track']['popularity']
-        self.link = result_item['track']['external_urls']['spotify']
+    def __init__(self, track):
+        self.id = track['id']
+        self.name = track['name']
+        self.artist = track['artists'][0]['name']
+        self.explicit = track['explicit']
+        self.release_date = track['album']['release_date']
+        self.release_date_precision = track['album']['release_date_precision']
+        self.duration_ms = track['duration_ms']
+        self.popularity = track['popularity']
+        self.link = track['external_urls']['spotify']
 
     def set_audio_features(self, audio_features):
         self.danceability = audio_features['danceability']
