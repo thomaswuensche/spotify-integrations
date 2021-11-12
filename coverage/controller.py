@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+from rich.progress import track as track_progress
 
 import sys, os; sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from spotify_client import SpotifyClient
@@ -103,26 +104,31 @@ class CoverageController(SpotifyClient):
             else:
                 result = self.playlist_tracks(id)
 
-            if verbose: logging.info(f'extracting tracks from {self.id_origin(id)}...')
+            sequence = range(0, result['total'], result['limit'])
+            if verbose:
+                sequence = track_progress(sequence, description='')
+                logging.info(f'extracting tracks from {self.id_origin(id)}...')
 
-            tracks = []
-            while True:
-                for item in result['items']:
-                    if 'track' in item:
-                        if not item['track']['is_local']:
-                            tracks.append({
-                                'id': item['track']['id'],
-                                'added_at': item['added_at']
-                            })
-                    else:
-                        tracks.append({'id': item['id']})
-
-                if not result['next']: break
-                result = self.next(result)
-
-            self.cache[id] = tracks
+            self.cache[id] = self.extract_from_result(result, sequence)
 
         return self.cache[id]
+
+    def extract_from_result(self, result, sequence):
+        tracks = []
+        for i in sequence:
+            for item in result['items']:
+                if 'track' in item:
+                    if not item['track']['is_local']:
+                        tracks.append({
+                            'id': item['track']['id'],
+                            'added_at': item['added_at']
+                        })
+                else:
+                    tracks.append({'id': item['id']})
+
+            result = self.next(result)
+
+        return tracks
 
     def sort_diff_tracks(self, diff_tracks):
         logging.debug('sorting tracks by added at...')
