@@ -1,5 +1,5 @@
-.cache-t6am47
-.env
+.cache*
+.env*
 
 tracks.txt
 

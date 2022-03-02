@@ -36,7 +36,7 @@ class SpotifyClient(Spotify):
         cache_path = os.path.abspath(f'{os.path.dirname(__file__)}/.cache-{self.username}')
 
         try:
-            cache = open(cache_path)
+            open(cache_path)
         except FileNotFoundError:
             logging.debug('.cache not found')
 

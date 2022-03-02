@@ -8,14 +8,19 @@ from spotify_client import SpotifyClient
 
 class CoverageController(SpotifyClient):
 
-    def __init__(self):
+    def __init__(self, rich_logs=None):
         super().__init__()
         self.cache = {}
         self.get_user_playlists()
+        self.rich_logs = rich_logs if rich_logs != None else int(os.environ['RICH_LOGS'])
 
     def check_coverage(self, origin, check_against, diff_pl, min_date=None, type=None):
         tracks_to_check = self.extract_tracks(origin)
+        sort = False if origin.startswith('top_tracks') else True
+        diff_tracks = self.get_coverage_diff(tracks_to_check, check_against, sort, min_date, type)
+        self.upload_diff(diff_tracks, diff_pl)
 
+    def get_coverage_diff(self, tracks_to_check, check_against, sort=False, min_date=None, type=None):
         if min_date:
             tracks_to_check = list(filter(
                 lambda track: track['added_at'] >= min_date,
@@ -37,10 +42,10 @@ class CoverageController(SpotifyClient):
         diff_percent = round(diff_size / tracks_to_check_size * 100)
         logging.info(f'tracks not covered: {diff_size} ({diff_percent}%)')
 
-        if not origin.startswith('top_tracks'):
+        if sort:
             diff_tracks = self.sort_diff_tracks(diff_tracks)
 
-        self.upload_diff(diff_tracks, diff_pl)
+        return diff_tracks
 
     def get_covered_ids(self, type, check_against):
         if type == 'regex':
@@ -53,8 +58,14 @@ class CoverageController(SpotifyClient):
 
     def get_covered_tracks_regex(self, regex):
         logging.info('getting tracks from playlists...')
+
+        if self.rich_logs:
+            filtered_playlists = track_progress(self.get_filtered_playlists(regex), description='')
+        else:
+            filtered_playlists = self.get_filtered_playlists(regex)
+
         covered_tracks = []
-        for playlist in self.get_filtered_playlists(regex):
+        for playlist in filtered_playlists:
             covered_tracks += self.extract_tracks(
                 playlist['id'],
                 verbose = False
@@ -102,20 +113,18 @@ class CoverageController(SpotifyClient):
             elif id.startswith('top_tracks'):
                 result = self.current_user_top_tracks(limit=50, time_range=id.split(':')[-1])
             else:
-                result = self.playlist_tracks(id)
+                result = self.playlist_tracks(id, limit=50)
 
-            sequence = range(0, result['total'], result['limit'])
             if verbose:
-                sequence = track_progress(sequence, description='')
                 logging.info(f'extracting tracks from {self.id_origin(id)}...')
 
-            self.cache[id] = self.extract_from_result(result, sequence)
+            self.cache[id] = self.extract_from_result(result, verbose=verbose)
 
         return self.cache[id]
 
-    def extract_from_result(self, result, sequence):
+    def extract_from_result(self, result, limit=None, verbose=True):
         tracks = []
-        for i in sequence:
+        for i in self.get_range(result['total'], result['limit'], verbose):
             for item in result['items']:
                 if 'track' in item:
                     if not item['track']['is_local']:
@@ -125,6 +134,9 @@ class CoverageController(SpotifyClient):
                         })
                 else:
                     tracks.append({'id': item['id']})
+
+            if len(tracks) == limit:
+                break
 
             result = self.next(result)
 
@@ -147,7 +159,7 @@ class CoverageController(SpotifyClient):
 
         if ids_to_upload:
             logging.info('uploading tracks to diff playlist...')
-            for i in range(0, len(ids_to_upload), 100):
+            for i in self.get_range(len(ids_to_upload), 100):
                 self.playlist_add_items(diff_pl, ids_to_upload[i : i+100])
 
     def remove_all_from_playlist(self, playlist_id):
@@ -157,5 +169,11 @@ class CoverageController(SpotifyClient):
         )
         ids_to_remove = [x['id'] for x in tracks_to_remove]
 
-        for i in range(0, len(ids_to_remove), 100):
+        for i in self.get_range(len(ids_to_remove), 100):
             self.playlist_remove_all_occurrences_of_items(playlist_id, ids_to_remove[i : i+100])
+
+    def get_range(self, stop, step, verbose=True, description=''):
+        if self.rich_logs and verbose:
+            return track_progress(range(0, stop, step), description)
+        else:
+            return range(0, stop, step)

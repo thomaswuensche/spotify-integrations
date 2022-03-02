@@ -1,7 +1,7 @@
 [{
     "name": "library > playlists",
     "origin": "library",
-    "check_against": "^([_+]?\\d{2}_\\w+|^//\\w+)$",
+    "check_against": "^(\\+?\\d{2}_\\w+|^//\\w+)$",
     "diff_pl": "1D6xkvZWaikkFBCNtPT63q",
     "min_date": null,
     "type": "regex"
@@ -36,14 +36,14 @@
 }, {
     "name": "swr1 > playlists",
     "origin": "0yiODuUK8CsnuRqNuuoQ2j",
-    "check_against": "^([_+]?\\d{2}_\\w+|^//\\w+)$",
+    "check_against": "^(\\+?\\d{2}_\\w+|^//\\w+)$",
     "diff_pl": "1eOZgO3NE0vl3A4ffIm6hj",
     "min_date": null,
     "type": "regex"
 }, {
     "name": "dlf nova > playlists",
     "origin": "7ExcUJvm8A33j28Yvw4UZj",
-    "check_against": "^([_+]?\\d{2}_\\w+|^//\\w+)$",
+    "check_against": "^(\\+?\\d{2}_\\w+|^//\\w+)$",
     "diff_pl": "0yo7Gg84SNV8anGNIvIPYG",
     "min_date": null,
     "type": "regex"
