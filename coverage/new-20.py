@@ -10,7 +10,7 @@ controller = CoverageController(rich_logs=False)
 
 logging.info('liked tracks new 20...')
 result = controller.current_user_saved_tracks(limit=50)
-liked_tracks = controller.extract_from_result(result, limit=200)
+liked_tracks = controller.extract_from_result(result, limit=500)
 
 diff_tracks = controller.get_coverage_diff(
     tracks_to_check = liked_tracks,
